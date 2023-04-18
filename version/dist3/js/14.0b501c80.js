@@ -1,0 +1,2 @@
+"use strict";(self["webpackChunkmbse_vue3"]=self["webpackChunkmbse_vue3"]||[]).push([[14],{89:function(n,e){e.Z=(n,e)=>{const r=n.__vccOpts||n;for(const[t,u]of e)r[t]=u;return r}},9014:function(n,e,r){r.r(e),r.d(e,{default:function(){return f}});var t=r(3396);function u(n,e,r,u,c,s){return(0,t.wg)(),(0,t.iD)("p",null,"relation")}var c={},s=r(89);const o=(0,s.Z)(c,[["render",u]]);var f=o}}]);
+//# sourceMappingURL=14.0b501c80.js.map
