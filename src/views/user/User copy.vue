@@ -1,11 +1,11 @@
 <template>
-  <div class="user-main" v-if="currentUserLevel == 'PA'">
+  <div class="user-main">
     <!-- 最顶部 新增和搜索区域 -->
     <div class="user-header">
       <!-- 新增 -->
-      <el-button type="primary" @click="handleAdd"> 邀请用户 </el-button>
+      <el-button type="primary" @click="handleAdd"> 新增 </el-button>
       <!-- 搜索 -->
-      <!-- <el-form :inline="true" :model="formInline">
+      <el-form :inline="true" :model="formInline">
         <el-form-item label="请输入">
           <el-input
             v-model="formInline.keyword"
@@ -15,7 +15,7 @@
         <el-form-item>
           <el-button type="primary" @click="handleSearch">搜索</el-button>
         </el-form-item>
-      </el-form> -->
+      </el-form>
     </div>
     <!-- 用户数据展示区域 -->
     <div class="table">
@@ -39,7 +39,7 @@
               size="small"
               @click="handleDelete(scope.row)"
             >
-              移除用户
+              删除
             </el-button>
           </template>
         </el-table-column>
@@ -148,47 +148,29 @@
 
 <script setup>
 import { getCurrentInstance, onMounted, reactive, ref } from "vue";
-import { useRouter } from "vue-router";
-import { useStore } from "vuex";
 import { ElMessageBox, ElMessage } from "element-plus";
 
 const { proxy } = getCurrentInstance();
-const store = useStore();
-const router = useRouter();
-
-// 获取当前登陆用户对该项目的权限
-store.commit("getCurrentUserLevel");
-const currentUserLevel = store.state.currentUserLevel;
-// console.log("currentUserLevel:", currentUserLevel);
-
-// 获取当前登陆用户以及所操作的项目
-store.commit("getCurrentUser");
-store.commit("getCurrentUserSelectedProject");
-const userAndProject = reactive({
-  user: store.state.currentUser,
-  project: store.state.selectedProject,
-});
-
 const list = ref([]);
 // 表格头部内容
 const tableLabel = reactive([
   {
-    prop: "username",
+    prop: "software",
     label: "用户名",
     width: 260,
   },
   {
-    prop: "department",
+    prop: "name",
     label: "部门",
     width: 260,
   },
   {
-    prop: "email",
+    prop: "department",
     label: "邮箱",
     width: 260,
   },
   {
-    prop: "phoneNum",
+    prop: "phoneNumber",
     label: "手机号",
     width: 260,
   },
@@ -202,11 +184,9 @@ const config = reactive({
 
 // 获取用户信息
 async function getUserData(config) {
-  // let res = await proxy.$api.getUserData(config);
-  let res = await proxy.$api.changeUserLevel(userAndProject);
-  console.log("res:", res);
+  let res = await proxy.$api.getUserData(config);
   config.total = res.count;
-  list.value = res.userList.map((item) => {
+  list.value = res.list.map((item) => {
     return item;
   });
 }
@@ -217,15 +197,14 @@ const changePage = (page) => {
   getUserData(config);
 };
 
-// 用户搜索
-// const formInline = reactive({
-//   keyword: "",
-// });
+const formInline = reactive({
+  keyword: "",
+});
 
-// const handleSearch = () => {
-//   config.name = formInline.keyword;
-//   getUserData(config);
-// };
+const handleSearch = () => {
+  config.name = formInline.keyword;
+  getUserData(config);
+};
 
 // 控制对话框的显示与隐藏
 const dialogVisible = ref(false);

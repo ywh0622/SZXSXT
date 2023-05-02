@@ -45,7 +45,6 @@ function request(options){
     //     },
     //     mock:false,
     // }
-
     options.method = options.method || 'get'
     if(options.method.toLowerCase() == 'get'){
         options.params = options.data

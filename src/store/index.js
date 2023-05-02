@@ -108,7 +108,7 @@ export default createStore({
         },
         // 获取当前用户对某个项目的权限
         getCurrentUserLevel(state){
-            state.currentUser = JSON.parse(localStorage.getItem('currentUserLevel'))
+            state.currentUserLevel = JSON.parse(localStorage.getItem('currentUserLevel'))
         },
         // 退出后，清除当前用户对某个项目的权限
         clearCurrentUserLevel(state){

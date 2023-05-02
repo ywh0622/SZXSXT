@@ -65,10 +65,20 @@ export default {
             data:params
         })
     },
+    // PA账号对MA账号的权限修改
+    changeUserLevel(params){
+        return request({
+            url: '/changeUserLevel/'+params.user,
+            method: 'get',
+            // 真实上线需要改成false
+            mock:true,
+            data:params
+        })
+    },
     // 获取该用户的项目信息
     getRepoList(params){
         return request({
-            url: '/repo/getRepoList',
+            url: '/repo/getRepoList/'+params.user,
             method: 'get',
             // 真实上线需要改成false
             mock:true,

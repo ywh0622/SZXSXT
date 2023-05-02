@@ -8,10 +8,23 @@
 </template>
 
 <script setup>
-import { ref, getCurrentInstance, onMounted, nextTick } from "vue";
+import { ref, getCurrentInstance, onMounted, nextTick, reactive } from "vue";
 import { SortUp } from "@element-plus/icons-vue";
+import { useRouter } from "vue-router";
+import { useStore } from "vuex";
 const { proxy } = getCurrentInstance();
 import axios from "axios";
+const store = useStore();
+const router = useRouter();
+
+// 获取当前登陆用户以及所操作的项目
+store.commit("getCurrentUser");
+store.commit("getCurrentUserSelectedProject");
+const userAndProject = reactive({
+  user: store.state.currentUser,
+  project: store.state.selectedProject,
+});
+
 let msg1 = ref(null);
 let msg2 = ref(null);
 let msg3 = ref(null);
@@ -26,7 +39,7 @@ let msg3 = ref(null);
 // );
 
 const getRepoList = async () => {
-  let tempList = await proxy.$api.getRepoList();
+  let tempList = await proxy.$api.getRepoList(userAndProject);
   // 向接口请求数据，tempList为得到后的数据
   msg1.value = tempList;
 };

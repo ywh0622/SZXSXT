@@ -17,6 +17,8 @@
           v-if="current && $route.name == current.name"
         >
           <span>{{ current.label }}</span>
+          <span class="blank">/</span>
+          <span>{{ currentProjectName }}</span>
         </el-breadcrumb-item>
       </el-breadcrumb>
     </div>
@@ -43,24 +45,21 @@
 import { useStore } from "vuex";
 import { computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
-let store = useStore();
+const store = useStore();
+const router = useRouter();
 const imgSrc = require("../assets/user1.jpg");
-// function getImgSrc(user){
-//   return new URL(`../assets/${user}.jpg`, import.meta.url).href
-// }
+
 function handleCollapse() {
   store.commit("updateCollapse", "123");
 }
 
 const current = computed(() => {
-  // console.log(store.state.currentMenu);
   return store.state.currentMenu;
 });
 
-const router = useRouter();
-// const route = useRoute();
-// console.log("header", route.name);
-
+// 获取当前项目名称
+store.commit("getCurrentUserSelectedProject");
+const currentProjectName = store.state.selectedProject;
 const handleLoginOut = () => {
   store.commit("cleanMenu");
   store.commit("clearToken");
@@ -81,6 +80,10 @@ header {
   align-items: center;
   width: 100%;
   background-color: #eaedf1;
+}
+.blank {
+  padding-left: 8px;
+  padding-right: 8px;
 }
 .r-content {
   .user {

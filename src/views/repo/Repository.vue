@@ -241,10 +241,22 @@
 </template>
 
 <script setup>
-import { ref, getCurrentInstance, onMounted, nextTick } from "vue";
+import { ref, getCurrentInstance, onMounted, nextTick, reactive } from "vue";
 import { ElMessageBox, ElMessage } from "element-plus";
 import { SortUp } from "@element-plus/icons-vue";
+import { useRouter } from "vue-router";
+import { useStore } from "vuex";
 const { proxy } = getCurrentInstance();
+const store = useStore();
+const router = useRouter();
+
+// 获取当前登陆用户以及所操作的项目
+store.commit("getCurrentUser");
+store.commit("getCurrentUserSelectedProject");
+const userAndProject = reactive({
+  user: store.state.currentUser,
+  project: store.state.selectedProject,
+});
 
 // 左侧 el-tree配置
 const projectProps = {
@@ -272,7 +284,7 @@ const handleNodeClick = (data) => {
 // 左侧 el-tree 通过api获取项目
 let projectList = ref([]);
 const getRepoList = async () => {
-  let tempList = await proxy.$api.getRepoList();
+  let tempList = await proxy.$api.getRepoList(userAndProject);
   // 向接口请求数据，tempList为得到后的数据
   projectList.value = tempList;
 };
@@ -295,6 +307,7 @@ let childCurrentProject = ref({
 let showButtonFlag = ref(false);
 const childhandleNodeClick = (data) => {
   childCurrentProject.value = data;
+  console.log("childCurrentProject: ", childCurrentProject);
   showButtonFlag.value = true;
 };
 
