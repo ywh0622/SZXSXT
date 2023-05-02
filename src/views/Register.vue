@@ -181,6 +181,7 @@ const { proxy } = getCurrentInstance();
 const store = useStore();
 const router = useRouter();
 
+// 表单信息，用户最后提交的注册信息
 const registerForm = reactive({
   username: "",
   password: "",
@@ -228,9 +229,15 @@ const checkPhoneNumber = (rule, value, callback) => {
   callback(new Error("请输入合法的手机号"));
 };
 
+// 用户注册
 const onRegister = () => {
   proxy.$refs.registerFormRef.validate(async (valid) => {
     if (valid) {
+      console.log("registerForm:", registerForm);
+      // 向后端发送注册信息
+      await proxy.$api.register(registerForm);
+      // 能得到信息就表示登陆成功，因为提前对返回信息做了处理
+      // 如果code！=200,会直接提示登陆失败
       router.push({
         name: "login",
       });

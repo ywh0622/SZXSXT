@@ -54,7 +54,7 @@ const router = useRouter();
 // 获取当前用户项目列表
 store.commit("getCurrentUserProjectList");
 const projectList = store.state.currentUserProjectList;
-// 最后表单所提交的数据
+// 表单中的数据
 const formData = reactive({
   selectedProject: "",
 });

@@ -36,19 +36,29 @@ export default {
             data:params
         })
     },
-    // 根据不同用户返回不同的用户菜单
-    getMenu(params){
-        return request({
-            url: '/permission/getMenu',
-            method: 'post',
-            mock:false,
-            data:params
-        })
-    },
+    // 根据不同用户返回不同的用户菜单，已废弃
+    // getMenu(params){
+    //     return request({
+    //         url: '/permission/getMenu',
+    //         method: 'post',
+    //         mock:false,
+    //         data:params
+    //     })
+    // },
     // 登陆账号
     login(params){
         return request({
             url: '/login',
+            method: 'post',
+            // 真实上线需要改成false
+            mock:true,
+            data:params
+        })
+    },
+    // 注册账号
+    register(params){
+        return request({
+            url: '/register',
             method: 'post',
             // 真实上线需要改成false
             mock:true,
