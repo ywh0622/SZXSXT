@@ -5,14 +5,14 @@
         <h1>数字线索系统</h1>
       </div>
       <el-form
-        :model="selectedProject"
+        :model="formData"
         ref="selectedProjectRef"
         require-asterisk-position="right"
       >
         <el-form-item
           label="project"
           label-width="150px"
-          prop="project"
+          prop="selectedProject"
           :rules="[
             {
               required: true,
@@ -20,11 +20,16 @@
             },
           ]"
         >
-          <el-select v-model="selectedProject.project" placeholder="选择项目">
-            <el-option label="MagicDraw" value="MagicDraw" />
-            <el-option label="MatLab" value="MatLab" />
-            <el-option label="MatLab" value="MatLab" />
-            <el-option label="MatLab" value="MatLab" />
+          <el-select
+            v-model="formData.selectedProject"
+            placeholder="请选择项目"
+          >
+            <el-option
+              v-for="item in projectList"
+              :key="item.projectName"
+              :label="item.projectName"
+              :value="item.projectName"
+            />
           </el-select>
         </el-form-item>
 
@@ -37,7 +42,7 @@
 </template>
 
 <script setup>
-import { reactive, getCurrentInstance } from "vue";
+import { reactive, getCurrentInstance, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useStore } from "vuex";
 import { ElMessage } from "element-plus";
@@ -46,16 +51,25 @@ const { proxy } = getCurrentInstance();
 const store = useStore();
 const router = useRouter();
 
-const selectedProject = reactive({
-  project: "",
+// 获取当前用户项目列表
+store.commit("getCurrentUserProjectList");
+const projectList = store.state.currentUserProjectList;
+// 最后表单所提交的数据
+const formData = reactive({
+  selectedProject: "",
 });
-
 const Continue = () => {
   proxy.$refs.selectedProjectRef.validate(async (valid) => {
-    // console.log("ccc");
-    // console.log("selectedProject : ", selectedProject.project);
     if (valid) {
-      console.log("valid = ", valid);
+      // 在store中设置当前用户所选择的项目
+      store.commit("setCurrentUserSelectedProject", formData.selectedProject);
+      // 在store中设置当前用户对所选择的项目的权限
+      projectList.forEach((element) => {
+        if (element.projectName == formData.selectedProject) {
+          store.commit("setCurrentUserLevel", element.userLevel);
+        }
+      });
+      // 跳转到后续页面
       router.push({
         name: "home",
       });

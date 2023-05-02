@@ -64,6 +64,10 @@ const router = useRouter();
 const handleLoginOut = () => {
   store.commit("cleanMenu");
   store.commit("clearToken");
+  store.commit("clearCurrentUser");
+  store.commit("clearCurrentUserLevel");
+  store.commit("clearCurrentUserProjectList");
+  store.commit("clearCurrentUserSelectedProject");
   router.push({
     name: "login",
   });

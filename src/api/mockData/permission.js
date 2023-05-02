@@ -3,8 +3,6 @@ import Mock from 'mockjs'
 export default {
     getMenu: config => {
         const {username, password} = JSON.parse(config.body)
-        // 先判断用户是否存在
-        // 再判断账号和密码是否正确
         if(username === 'admin' && password === 'admin'){
             return {
                 code:200,
@@ -78,7 +76,7 @@ export default {
             return{
                 code:-999,
                 data:[],
-                msg:'登陆失败'
+                message:'登陆失败'
             }
         }
     }

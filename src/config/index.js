@@ -9,7 +9,7 @@
 // 当前环境
 console.log('process.env', process.env)
 const env = process.env.NODE_ENV
-console.log('env:',env);
+// console.log('env:',env);
 const EnvConfig = {
     development: {
         baseApi: "/api",

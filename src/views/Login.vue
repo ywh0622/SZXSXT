@@ -35,9 +35,6 @@
               placeholder="请输入账号"
               clearable
             >
-              <!-- <template #prepend>
-                <el-button :icon="User" />
-              </template> -->
             </el-input>
           </el-form-item>
           <!-- 密码 -->
@@ -57,9 +54,6 @@
               placeholder="请输入密码"
               clearable
             >
-              <!-- <template #prepend>
-                <el-button :icon="Lock" />
-              </template> -->
             </el-input>
           </el-form-item>
           <!-- 按钮区域 -->
@@ -75,30 +69,83 @@
 </template>
 
 <script setup>
-import { reactive, getCurrentInstance } from "vue";
+import { reactive, getCurrentInstance, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useStore } from "vuex";
 import { ElMessage } from "element-plus";
+import Mock from "mockjs";
 const { proxy } = getCurrentInstance();
 
+// 存放用户输入的账号和密码
 const loginForm = reactive({
   username: "",
   password: "",
 });
+
+// 菜单栏地址
+const menuPath = reactive([
+  {
+    path: "/home",
+    name: "home",
+    label: "首页",
+    icon: "location",
+    url: "home/Home",
+  },
+  {
+    path: "/repo",
+    name: "repository",
+    label: "模型仓库",
+    icon: "house",
+    url: "repo/Repository",
+  },
+  {
+    path: "/relation",
+    name: "relation",
+    label: "模型关系",
+    icon: "house",
+    url: "relation/Relation",
+  },
+  {
+    path: "/user",
+    name: "user",
+    label: "用户管理",
+    icon: "user",
+    url: "user/User",
+  },
+]);
+
 const store = useStore();
 const router = useRouter();
 
 const login = () => {
   proxy.$refs.loginFormRef.validate(async (valid) => {
     if (valid) {
-      const res = await proxy.$api.getMenu(loginForm);
+      //--------------------------------------------------
+      // 旧版登陆代码 后期删除
+      // const res = await proxy.$api.getMenu(loginForm);
+      // console.log("res.menu", res.menu);
+      // console.log("res", res);
+      // store.commit("setMenu", res.menu);
+      // store.commit("addMenu", router);
+      // store.commit("setToken", res.token);
+      //--------------------------------------------------
+      // console.log("用户信息为:", loginForm);
+      const data = await proxy.$api.login(loginForm);
+      // 能得到信息就表示登陆成功，因为提前对返回信息做了处理
+      // 如果code！=200,会直接提示登陆失败
       // 将用户的菜单保存到store中的menu变量和浏览器中
-      store.commit("setMenu", res.menu);
+      store.commit("setMenu", menuPath);
       store.commit("addMenu", router);
-      store.commit("setToken", res.token);
+      // 设置登陆token
+      store.commit("setToken", Mock.Random.guid());
+      // 将当前用户名称和用户所拥有的项目传入store中
+      store.commit("setCurrentUser", loginForm.username);
+      store.commit("setCurrentUserProjectList", data.projectList);
+      // 跳转到项目选择页面
       router.push({
         name: "projectSelect",
       });
+      // 输出成功信息
       ElMessage({
         showClose: true,
         message: "登陆成功,请选择项目",
@@ -116,19 +163,17 @@ const login = () => {
 
 // 转注册页面
 const userRegister = () => {
-  console.log("hello");
   router.push({
     name: "reg",
   });
-  console.log(router);
-  console.log("hello1");
+  // console.log(router);
 };
 </script>
 
 <style lang="less" scoped>
 .blank {
-  margin-left: 70px;
-  margin-right: 70px;
+  margin-left: 75px;
+  // margin-right: 65px;
 }
 .title_area {
   text-align: center;
@@ -143,7 +188,7 @@ const userRegister = () => {
 }
 
 .login_box {
-  width: 450px;
+  width: 460px;
   height: 250px;
 
   border: 1px solid #eaeaea;

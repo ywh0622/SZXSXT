@@ -45,6 +45,16 @@ export default {
             data:params
         })
     },
+    // 登陆账号
+    login(params){
+        return request({
+            url: '/login',
+            method: 'post',
+            // 真实上线需要改成false
+            mock:true,
+            data:params
+        })
+    },
     // 获取该用户的项目信息
     getRepoList(params){
         return request({

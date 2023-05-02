@@ -61,7 +61,6 @@
             v-model="registerForm.password"
             placeholder="请输入密码"
             type="password"
-            show-password
           />
         </el-form-item>
 
@@ -80,7 +79,6 @@
             v-model="registerForm.confirmPassword"
             placeholder="请输入确认密码"
             type="password"
-            show-password
           />
         </el-form-item>
 
@@ -150,11 +148,16 @@
               required: true,
               message: '手机号不能为空',
             },
+            {
+              required: true,
+              validator: checkPhoneNumber,
+              trigger: 'blur',
+            },
           ]"
         >
           <el-input
-            v-model="registerForm.phoneNum"
-            oninput="value=value.replace(/[^\d]/g,'')"
+            v-model.number="registerForm.phoneNum"
+            oninput="value=value.replace(/[^\d]/g,'');if(value.length > 11)value = value.slice(0, 11)"
             placeholder="请输入手机号"
           />
         </el-form-item>
@@ -211,6 +214,18 @@ const checkEmail = (rule, value, callback) => {
     return callback();
   }
   callback(new Error("请输入合法的邮箱"));
+};
+
+// 判断手机号是否合法 checkPhoneNumber
+const checkPhoneNumber = (rule, value, callback) => {
+  // 验证邮箱的正则表达式
+  const regPhoneNumber = 11 && /^((13|14|15|16|17|18|19)[0-9]{1}\d{8})$/;
+
+  if (regPhoneNumber.test(value)) {
+    // 合法的手机号
+    return callback();
+  }
+  callback(new Error("请输入合法的手机号"));
 };
 
 const onRegister = () => {
