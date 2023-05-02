@@ -1,22 +1,9 @@
 <template>
   <div class="user-main" v-if="currentUserLevel == 'PA'">
     <!-- 最顶部 新增和搜索区域 -->
-    <div class="user-header">
-      <!-- 新增 -->
+    <!-- <div class="user-header">
       <el-button type="primary" @click="handleAdd"> 邀请用户 </el-button>
-      <!-- 搜索 -->
-      <!-- <el-form :inline="true" :model="formInline">
-        <el-form-item label="请输入">
-          <el-input
-            v-model="formInline.keyword"
-            placeholder="用户名/工作部门"
-          />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="handleSearch">搜索</el-button>
-        </el-form-item>
-      </el-form> -->
-    </div>
+    </div> -->
     <!-- 用户数据展示区域 -->
     <div class="table">
       <el-table :data="list" style="width: 100%" height="500px">
@@ -55,94 +42,37 @@
         class="pager mt-4"
       />
     </div>
-    <!-- 新增/删除用户提示框 -->
+    <!-- 邀请用户提示框 -->
     <el-dialog
       v-model="dialogVisible"
-      :title="action == 'add' ? '新增用户' : '编辑用户'"
+      title="邀请用户"
       width="35%"
       :before-close="handleClose"
     >
-      <el-form :inline="true" :model="formUser" ref="userForm">
-        <el-row>
-          <el-col :span="12">
-            <el-form-item
-              label="线程软件"
-              prop="software"
-              :rules="[
-                {
-                  required: true,
-                  message: '线程软件不能为空',
-                },
-              ]"
-            >
-              <el-input
-                v-model="formUser.software"
-                placeholder="请输入线程软件"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item
-              label="工程负责人"
-              prop="name"
-              :rules="[
-                {
-                  required: true,
-                  message: '工程负责人不能为空',
-                },
-              ]"
-            >
-              <el-input
-                v-model="formUser.name"
-                placeholder="请输入工程负责人"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row>
-          <el-col :span="12">
-            <el-form-item
-              label="工作部门"
-              prop="department"
-              :rules="[
-                {
-                  required: true,
-                  message: '工作部门不能为空',
-                },
-              ]"
-            >
-              <el-input
-                v-model="formUser.department"
-                placeholder="请输入工作部门"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item
-              label="电话"
-              prop="phoneNumber"
-              :rules="[
-                {
-                  required: true,
-                  message: '电话不能为空',
-                },
-              ]"
-            >
-              <el-input
-                v-model.number="formUser.phoneNumber"
-                placeholder="请输入电话"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row style="justify-content: flex-end">
-          <el-form-item>
-            <el-button type="primary" @click="handleCancel">取消</el-button>
-            <el-button type="primary" @click="onSubmit">确定</el-button>
-          </el-form-item>
-        </el-row>
-      </el-form>
+      table
     </el-dialog>
+    <!-- 显示用户权限 -->
+    <el-drawer v-model="drawer" :before-close="handleUserLevelClose">
+      <template #header>
+        <h4>用户权限修改</h4>
+      </template>
+      <el-form :model="formUser" label-width="120px">
+        <el-form-item label="用户名">
+          <el-input v-model="formUser.username" disabled />
+        </el-form-item>
+        <el-form-item
+          v-for="(item, idx) in formUser.authority"
+          :key="idx"
+          :label="item['modelType']"
+        >
+          <el-switch v-model="item['hasAuthority']" />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="onSubmit">提交修改</el-button>
+          <el-button @click="cancelClick">取消修改</el-button>
+        </el-form-item>
+      </el-form>
+    </el-drawer>
   </div>
 </template>
 
@@ -159,7 +89,6 @@ const router = useRouter();
 // 获取当前登陆用户对该项目的权限
 store.commit("getCurrentUserLevel");
 const currentUserLevel = store.state.currentUserLevel;
-// console.log("currentUserLevel:", currentUserLevel);
 
 // 获取当前登陆用户以及所操作的项目
 store.commit("getCurrentUser");
@@ -168,6 +97,11 @@ const userAndProject = reactive({
   user: store.state.currentUser,
   project: store.state.selectedProject,
 });
+
+// 控制邀请用户提示框的显示与隐藏
+const dialogVisible = ref(false);
+// 显示用户权限的显示与隐藏
+const drawer = ref(false);
 
 const list = ref([]);
 // 表格头部内容
@@ -193,6 +127,7 @@ const tableLabel = reactive([
     width: 260,
   },
 ]);
+// 分页配置
 const config = reactive({
   total: 0,
   page: 1,
@@ -202,7 +137,6 @@ const config = reactive({
 
 // 获取用户信息
 async function getUserData(config) {
-  // let res = await proxy.$api.getUserData(config);
   let res = await proxy.$api.changeUserLevel(userAndProject);
   console.log("res:", res);
   config.total = res.count;
@@ -211,31 +145,23 @@ async function getUserData(config) {
   });
 }
 
+// 改变页码
 const changePage = (page) => {
   // console.log(page );
   config.page = page;
   getUserData(config);
 };
+// 邀请用户
+const handleAdd = () => {
+  dialogVisible.value = true;
+};
 
-// 用户搜索
-// const formInline = reactive({
-//   keyword: "",
-// });
-
-// const handleSearch = () => {
-//   config.name = formInline.keyword;
-//   getUserData(config);
-// };
-
-// 控制对话框的显示与隐藏
-const dialogVisible = ref(false);
-
-// 点击对话的x
+// 点击邀请用户提示框对话的x
 const handleClose = (done) => {
   ElMessageBox.confirm("确定关闭吗?")
     .then(() => {
       // resetFields需要在el-form-item标签体内添加属性prop
-      proxy.$refs.userForm.resetFields();
+      // proxy.$refs.userForm.resetFields();
       done();
     })
     .catch(() => {
@@ -243,79 +169,32 @@ const handleClose = (done) => {
     });
 };
 
-// 添加/编辑用户的form数据
-const formUser = reactive({
-  name: "",
-  phonenumber: 1,
-  software: "",
-  department: "",
-});
-
-// 添加/编辑用户
-const onSubmit = () => {
-  // console.log("formUser",formUser);
-  proxy.$refs.userForm.validate(async (valid) => {
-    if (valid) {
-      if (action.value == "add") {
-        let res = await proxy.$api.addUser(formUser);
-        console.log("res", res);
-        if (res) {
-          dialogVisible.value = false;
-          // console.log(proxy.$refs);
-          // console.log(proxy.$refs.userForm);
-          // resetFields需要在el-form-item标签体内添加属性prop
-          proxy.$refs.userForm.resetFields();
-          getUserData(config);
-          ElMessage({
-            showClose: true,
-            message: "添加成功",
-            type: "success",
-          });
-        }
-      } else {
-        // 编辑的接口
-        // console.log(formUser);
-        let res = await proxy.$api.editUser(formUser);
-        // console.log('res',res);
-        if (res) {
-          dialogVisible.value = false;
-          // console.log(proxy.$refs);
-          // console.log(proxy.$refs.userForm);
-          // resetFields需要在el-form-item标签体内添加属性prop
-          proxy.$refs.userForm.resetFields();
-          getUserData(config);
-        }
-        ElMessage({
-          showClose: true,
-          message: "编辑成功",
-          type: "success",
-        });
-      }
-    } else {
-      ElMessage({
-        showClose: true,
-        message: "请输入正确的内容",
-        type: "error",
-      });
-    }
-  });
-};
-
-// 表单页面点击取消后，清除表单上面的内容 包括填写的内容和报错提示
+// 点击邀请用户提示框 表单页面点击取消后，清除表单上面的内容 包括填写的内容和报错提示
 const handleCancel = () => {
   dialogVisible.value = false;
   // resetFields需要在el-form-item标签体内添加属性prop
   proxy.$refs.userForm.resetFields();
 };
 
-// 区分编辑和新增
-const action = ref("add");
+//--------------------------
+const userLevelEdit = reactive({
+  name: "",
+  delivery: false,
+});
+// 修改用户权限的数据
+const formUser = reactive({
+  username: "",
+  phoneNum: 1,
+  email: "",
+  department: "",
+  authority: [],
+});
 
-// 编辑用户
+// 显示用户权限抽屉
 const handleEdit = (row) => {
   console.log("handleEdit", row);
-  dialogVisible.value = true;
-  action.value = "edit";
+  console.log("formUser:", formUser);
+  drawer.value = true;
   // console.log('handleEdit',row)
   // 下面的代码会将得到数据展示到打开的输入框中
   // 如果不加入nexttick函数，直接使用浅拷贝Object.assign(formUser,row)的话
@@ -328,10 +207,40 @@ const handleEdit = (row) => {
   });
 };
 
-// 新增用户
-const handleAdd = () => {
-  dialogVisible.value = true;
-  action.value = "add";
+// 点击取消 关闭用户权限抽屉
+function cancelClick() {
+  drawer.value = false;
+  // resetFields需要在el-form-item标签体内添加属性prop
+  window.location.reload();
+}
+
+// 点击确定 关闭用户权限抽屉
+function onSubmit() {
+  ElMessageBox.confirm("确定了吗?")
+    .then(() => {
+      drawer.value = false;
+      window.location.reload();
+      ElMessage({
+        showClose: true,
+        message: "修改成功",
+        type: "success",
+      });
+    })
+    .catch(() => {
+      // catch error
+    });
+}
+
+// 点击修改用户权限提示框对话的x
+const handleUserLevelClose = (done) => {
+  ElMessageBox.confirm("确定关闭吗?")
+    .then(() => {
+      window.location.reload();
+      done();
+    })
+    .catch(() => {
+      // catch error
+    });
 };
 
 // 删除用户
@@ -348,7 +257,6 @@ const handleDelete = (row) => {
         message: "删除成功",
         type: "success",
       });
-      getUserData(config);
     })
     .catch(() => {});
 };
@@ -357,7 +265,6 @@ onMounted(() => {
   getUserData(config);
 });
 </script>
-
 
 <style lang="less" scoped>
 .user-main {

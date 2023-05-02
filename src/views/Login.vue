@@ -108,8 +108,8 @@ const menuPath = reactive([
   {
     path: "/user",
     name: "user",
-    label: "用户管理",
-    icon: "user",
+    label: "权限管理",
+    icon: "Unlock",
     url: "user/User",
   },
 ]);
