@@ -4,38 +4,38 @@
 import request from "./request"
 
 export default {
-    getUserData(params){
-        return request({
-            url: '/user/getUser',
-            method: 'get',
-            mock:false,
-            data:params
-        })
-    },
-    addUser(params){
-        return request({
-            url: '/user/add',
-            method: 'post',
-            mock:false,
-            data:params
-        })
-    },
-    editUser(params){
-        return request({
-            url: '/user/edit',
-            method: 'post',
-            mock:false,
-            data:params
-        })
-    },
-    deleteUser(params){
-        return request({
-            url: '/user/delete',
-            method: 'get',
-            mock:false,
-            data:params
-        })
-    },
+    // getUserData(params){
+    //     return request({
+    //         url: '/user/getUser',
+    //         method: 'get',
+    //         mock:false,
+    //         data:params
+    //     })
+    // },
+    // addUser(params){
+    //     return request({
+    //         url: '/user/add',
+    //         method: 'post',
+    //         mock:false,
+    //         data:params
+    //     })
+    // },
+    // editUser(params){
+    //     return request({
+    //         url: '/user/edit',
+    //         method: 'post',
+    //         mock:false,
+    //         data:params
+    //     })
+    // },
+    // deleteUser(params){
+    //     return request({
+    //         url: '/user/delete',
+    //         method: 'get',
+    //         mock:false,
+    //         data:params
+    //     })
+    // },
     // 根据不同用户返回不同的用户菜单，已废弃
     // getMenu(params){
     //     return request({
@@ -68,8 +68,18 @@ export default {
     // PA账号对MA账号的权限修改
     changeUserLevel(params){
         return request({
-            url: '/changeUserLevel/'+params.user,
+            url: '/changeUserLevel/'+params.user +'/'+ params.project.selectedProjectId,
             method: 'get',
+            // 真实上线需要改成false
+            mock:true,
+            data:params
+        })
+    },
+    // PA账号项目中删除MA账号
+    deleteUser(params){
+        return request({
+            url: '/deleteUser',
+            method: 'post',
             // 真实上线需要改成false
             mock:true,
             data:params

@@ -59,7 +59,7 @@ const current = computed(() => {
 
 // 获取当前项目名称
 store.commit("getCurrentUserSelectedProject");
-const currentProjectName = store.state.selectedProject;
+const currentProjectName = store.state.selectedProject.selectedProjectName;
 const handleLoginOut = () => {
   store.commit("cleanMenu");
   store.commit("clearToken");

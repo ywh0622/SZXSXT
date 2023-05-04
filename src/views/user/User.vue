@@ -74,6 +74,9 @@
       </el-form>
     </el-drawer>
   </div>
+  <div class="user-main" v-if="currentUserLevel == 'MA'">
+    您暂无权限查看此页面
+  </div>
 </template>
 
 <script setup>
@@ -245,18 +248,26 @@ const handleUserLevelClose = (done) => {
 
 // 删除用户
 const handleDelete = (row) => {
-  // console.log(row)
   ElMessageBox.confirm("确定删除吗?")
     .then(async () => {
-      // resetFields需要在el-form-item标签体内添加属性prop
-      await proxy.$api.deleteUser({
-        id: row.id,
-      });
+      const deletedUser = {
+        username: row.username,
+        department: row.department,
+        email: row.email,
+        phoneNum: row.phoneNum,
+        currentUser: userAndProject.user,
+        currentProject: userAndProject.project.selectedProject,
+        currentProjectId: userAndProject.project.selectedProjectId,
+      };
+      // console.log(row);
+      // console.log("deletedUser", deletedUser);
+      await proxy.$api.deleteUser(deletedUser);
       ElMessage({
         showClose: true,
         message: "删除成功",
         type: "success",
       });
+      window.location.reload();
     })
     .catch(() => {});
 };

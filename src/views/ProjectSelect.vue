@@ -12,7 +12,7 @@
         <el-form-item
           label="project"
           label-width="150px"
-          prop="selectedProject"
+          prop="selectedProjectName"
           :rules="[
             {
               required: true,
@@ -21,7 +21,7 @@
           ]"
         >
           <el-select
-            v-model="formData.selectedProject"
+            v-model="formData.selectedProjectName"
             placeholder="请选择项目"
           >
             <el-option
@@ -56,19 +56,21 @@ store.commit("getCurrentUserProjectList");
 const projectList = store.state.currentUserProjectList;
 // 表单中的数据
 const formData = reactive({
-  selectedProject: "",
+  selectedProjectName: "",
+  selectedProjectId: "",
 });
 const Continue = () => {
   proxy.$refs.selectedProjectRef.validate(async (valid) => {
     if (valid) {
-      // 在store中设置当前用户所选择的项目
-      store.commit("setCurrentUserSelectedProject", formData.selectedProject);
       // 在store中设置当前用户对所选择的项目的权限
       projectList.forEach((element) => {
-        if (element.projectName == formData.selectedProject) {
+        if (element.projectName == formData.selectedProjectName) {
           store.commit("setCurrentUserLevel", element.userLevel);
+          formData.selectedProjectId = element.projectId;
         }
       });
+      // 在store中设置当前用户所选择的项目和项目ID
+      store.commit("setCurrentUserSelectedProject", formData);
       // 跳转到后续页面
       router.push({
         name: "home",

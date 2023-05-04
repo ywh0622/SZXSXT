@@ -14,7 +14,7 @@ const service = axios.create({
 service.interceptors.request.use((req) => {
     // 可以自定义header
     // jwt-token的时候
-    // console.log('发送请求',req);
+    console.log('发送请求',req);
     req.headers['token'] = 'vue-test'
     return req
 })
