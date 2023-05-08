@@ -1,5 +1,5 @@
 <template>
-  <div class="user-main" v-if="currentUserLevel == 'PA'">
+  <div class="user-main" v-if="currentUserLevel == '1'">
     <!-- 最顶部 新增和搜索区域 -->
     <!-- <div class="user-header">
       <el-button type="primary" @click="handleAdd"> 邀请用户 </el-button>
@@ -112,22 +112,27 @@ const tableLabel = reactive([
   {
     prop: "username",
     label: "用户名",
-    width: 260,
+    width: 230,
   },
   {
     prop: "department",
     label: "部门",
-    width: 260,
+    width: 230,
   },
-  {
-    prop: "email",
-    label: "邮箱",
-    width: 260,
-  },
+  // {
+  //   prop: "email",
+  //   label: "邮箱",
+  //   width: 230,
+  // },
   {
     prop: "phoneNum",
     label: "手机号",
-    width: 260,
+    width: 230,
+  },
+  {
+    prop: "ownAuthority",
+    label: "已拥有权限",
+    width: 350,
   },
 ]);
 // 分页配置
@@ -141,9 +146,16 @@ const config = reactive({
 // 获取用户信息
 async function getUserData(config) {
   let res = await proxy.$api.changeUserLevel(userAndProject);
-  console.log("res:", res);
+  // 获取信息总行数，页面中页码需要提前获取到总数量
   config.total = res.count;
   list.value = res.userList.map((item) => {
+    // 手动生成item["ownAuthority"]即前端的已拥有的权限
+    item["ownAuthority"] = "";
+    item["authority"].forEach((element) => {
+      if (element["hasAuthority"]) {
+        item["ownAuthority"] += element["modelType"] + " ";
+      }
+    });
     return item;
   });
 }
@@ -154,11 +166,13 @@ const changePage = (page) => {
   config.page = page;
   getUserData(config);
 };
+
 // 邀请用户
 const handleAdd = () => {
   dialogVisible.value = true;
 };
 
+//--------------------------
 // 点击邀请用户提示框对话的x
 const handleClose = (done) => {
   ElMessageBox.confirm("确定关闭吗?")
@@ -180,10 +194,6 @@ const handleCancel = () => {
 };
 
 //--------------------------
-const userLevelEdit = reactive({
-  name: "",
-  delivery: false,
-});
 // 修改用户权限的数据
 const formUser = reactive({
   username: "",
@@ -195,8 +205,6 @@ const formUser = reactive({
 
 // 显示用户权限抽屉
 const handleEdit = (row) => {
-  console.log("handleEdit", row);
-  console.log("formUser:", formUser);
   drawer.value = true;
   // console.log('handleEdit',row)
   // 下面的代码会将得到数据展示到打开的输入框中
@@ -213,7 +221,6 @@ const handleEdit = (row) => {
 // 点击取消 关闭用户权限抽屉
 function cancelClick() {
   drawer.value = false;
-  // resetFields需要在el-form-item标签体内添加属性prop
   window.location.reload();
 }
 
@@ -259,8 +266,6 @@ const handleDelete = (row) => {
         currentProject: userAndProject.project.selectedProject,
         currentProjectId: userAndProject.project.selectedProjectId,
       };
-      // console.log(row);
-      // console.log("deletedUser", deletedUser);
       await proxy.$api.deleteUser(deletedUser);
       ElMessage({
         showClose: true,

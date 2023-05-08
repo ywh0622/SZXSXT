@@ -48,20 +48,20 @@ export default {
     // 登陆账号
     login(params){
         return request({
-            url: '/login',
+            url: '/users/signIn',    // '/login',
             method: 'post',
-            // 真实上线需要改成false
-            mock:true,
+            // 真实上线或者请求服务器接口需要改成false
+            mock:false,
             data:params
         })
     },
     // 注册账号
     register(params){
         return request({
-            url: '/register',
+            url: '/users/signUp',       //'/register',
             method: 'post',
-            // 真实上线需要改成false
-            mock:true,
+            // 真实上线或者请求服务器接口需要改成false
+            mock:false,
             data:params
         })
     },
@@ -70,7 +70,7 @@ export default {
         return request({
             url: '/changeUserLevel/'+params.user +'/'+ params.project.selectedProjectId,
             method: 'get',
-            // 真实上线需要改成false
+            // 真实上线或者请求服务器接口需要改成false
             mock:true,
             data:params
         })
@@ -80,7 +80,7 @@ export default {
         return request({
             url: '/deleteUser',
             method: 'post',
-            // 真实上线需要改成false
+            // 真实上线或者请求服务器接口需要改成false
             mock:true,
             data:params
         })
@@ -90,7 +90,7 @@ export default {
         return request({
             url: '/repo/getRepoList/'+params.user,
             method: 'get',
-            // 真实上线需要改成false
+            // 真实上线或者请求服务器接口需要改成false
             mock:true,
             data:params
         })
@@ -100,7 +100,7 @@ export default {
         return request({
             url: '/repo/modifiableElement',
             method: 'get',
-            // 真实上线需要改成false
+            // 真实上线或者请求服务器接口需要改成false
             mock:true,
             data:params
         })
@@ -110,8 +110,18 @@ export default {
         return request({
             url: '/repo/testConnection',
             method: 'get',
-            // 真实上线需要改成false
+            // 真实上线或者请求服务器接口需要改成false
             mock:true,
+            data:params
+        })
+    },
+    // 登陆测试
+    loginTest(params){
+        return request({
+            url: '/loginUser',
+            method: 'post',
+            // 真实上线或者请求服务器接口需要改成false
+            mock:false,
             data:params
         })
     }

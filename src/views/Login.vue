@@ -130,7 +130,12 @@ const login = () => {
       // store.commit("setToken", res.token);
       //--------------------------------------------------
       // console.log("用户信息为:", loginForm);
-      const data = await proxy.$api.login(loginForm);
+      // 修改为form-data数据格式发送给后端
+      const form_data = new FormData();
+      form_data.append("username", loginForm.username);
+      form_data.append("password", loginForm.password);
+      const data = await proxy.$api.login(form_data);
+      console.log("data", data);
       // 能得到信息就表示登陆成功，因为提前对返回信息做了处理
       // 如果code！=200,会直接提示登陆失败
       // 将用户的菜单保存到store中的menu变量和浏览器中

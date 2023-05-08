@@ -47,7 +47,7 @@ import { computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 const store = useStore();
 const router = useRouter();
-const imgSrc = require("../assets/user1.jpg");
+const imgSrc = require("../assets/user.jpg");
 
 function handleCollapse() {
   store.commit("updateCollapse", "123");

@@ -30,7 +30,7 @@
 
         <el-form-item
           label="姓名"
-          prop="name"
+          prop="trueName"
           :rules="[
             {
               required: true,
@@ -38,7 +38,7 @@
             },
           ]"
         >
-          <el-input v-model="registerForm.name" placeholder="请输入姓名" />
+          <el-input v-model="registerForm.trueName" placeholder="请输入姓名" />
         </el-form-item>
 
         <el-form-item
@@ -93,9 +93,9 @@
           ]"
         >
           <el-radio-group v-model="registerForm.role">
-            <el-radio label="项目管理员" />
-            <el-radio label="模型管理员" />
-            <el-radio label="游客" />
+            <el-radio :label="0">项目管理员</el-radio>
+            <el-radio :label="1">模型管理员</el-radio>
+            <el-radio :label="2">游客</el-radio>
           </el-radio-group>
         </el-form-item>
 
@@ -108,7 +108,7 @@
 
         <el-form-item
           label="项目代码"
-          prop="projectCode"
+          prop="projectId"
           :rules="[
             {
               required: true,
@@ -117,7 +117,7 @@
           ]"
         >
           <el-input
-            v-model="registerForm.projectCode"
+            v-model="registerForm.projectId"
             placeholder="请输入项目代码"
           />
         </el-form-item>
@@ -142,7 +142,7 @@
 
         <el-form-item
           label="手机号"
-          prop="phoneNum"
+          prop="phone"
           :rules="[
             {
               required: true,
@@ -156,7 +156,7 @@
           ]"
         >
           <el-input
-            v-model.number="registerForm.phoneNum"
+            v-model.number="registerForm.phone"
             oninput="value=value.replace(/[^\d]/g,'');if(value.length > 11)value = value.slice(0, 11)"
             placeholder="请输入手机号"
           />
@@ -186,18 +186,16 @@ const registerForm = reactive({
   username: "",
   password: "",
   confirmPassword: "",
-  name: "",
-  role: "",
+  trueName: "",
+  role: 0,
   department: "",
-  projectCode: "",
+  projectId: "",
   email: "",
-  phoneNum: "",
+  phone: "",
 });
 
 // 密码校验 判断两次输入的密码是否一致
 const equalToPassword = (rule, value, callback) => {
-  // console.log(registerForm.password);
-  // console.log(value);
   if (registerForm.password !== value) {
     callback(new Error("两次输入的密码不一致"));
   } else {
@@ -209,7 +207,6 @@ const equalToPassword = (rule, value, callback) => {
 const checkEmail = (rule, value, callback) => {
   // 验证邮箱的正则表达式
   const regEmail = /^([a-zA-Z0-9_-])+@([a-zA-Z0-9_-])+(\.[a-zA-Z0-9_-])+/;
-
   if (regEmail.test(value)) {
     // 合法的邮箱
     return callback();
@@ -221,7 +218,6 @@ const checkEmail = (rule, value, callback) => {
 const checkPhoneNumber = (rule, value, callback) => {
   // 验证邮箱的正则表达式
   const regPhoneNumber = 11 && /^((13|14|15|16|17|18|19)[0-9]{1}\d{8})$/;
-
   if (regPhoneNumber.test(value)) {
     // 合法的手机号
     return callback();
@@ -234,9 +230,10 @@ const onRegister = () => {
   proxy.$refs.registerFormRef.validate(async (valid) => {
     if (valid) {
       console.log("registerForm:", registerForm);
+      console.log(JSON.stringify(registerForm));
       // 向后端发送注册信息
       await proxy.$api.register(registerForm);
-      // 能得到信息就表示登陆成功，因为提前对返回信息做了处理
+      // 能得到信息就表示登陆成功，因为提前对返回信息做了处理 13812341234
       // 如果code！=200,会直接提示登陆失败
       router.push({
         name: "login",

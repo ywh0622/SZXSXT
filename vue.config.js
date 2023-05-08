@@ -16,15 +16,15 @@ module.exports ={
   // },
 
   // 本机调试 
-  // proxy:{
-  //   ["/api"]:{
-  //   target:'http://8.130.42.107:8081',
-  //     changeOrigin:true,
-  //       pathRewrite: {
-  //           ['^' + "/api"]: ''
-  //       }
-  //   }
-  // }
+  proxy:{
+    ["/api"]:{
+    target:'http://8.130.42.107:8081',
+      changeOrigin:true,
+        pathRewrite: {
+            ['^' + "/api"]: ''
+        }
+    }
+  }
   },
   transpileDependencies: true,
   lintOnSave: false,
