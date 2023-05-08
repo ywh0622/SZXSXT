@@ -226,7 +226,7 @@ function cancelClick() {
 
 // 点击确定 关闭用户权限抽屉
 function onSubmit() {
-  ElMessageBox.confirm("确定了吗?")
+  ElMessageBox.confirm("确定关闭?")
     .then(() => {
       drawer.value = false;
       window.location.reload();
@@ -243,7 +243,7 @@ function onSubmit() {
 
 // 点击修改用户权限提示框对话的x
 const handleUserLevelClose = (done) => {
-  ElMessageBox.confirm("确定关闭吗?")
+  ElMessageBox.confirm("确定关闭?")
     .then(() => {
       window.location.reload();
       done();
@@ -255,7 +255,7 @@ const handleUserLevelClose = (done) => {
 
 // 删除用户
 const handleDelete = (row) => {
-  ElMessageBox.confirm("确定删除吗?")
+  ElMessageBox.confirm("确定删除?")
     .then(async () => {
       const deletedUser = {
         username: row.username,

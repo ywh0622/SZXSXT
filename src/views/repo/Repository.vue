@@ -307,7 +307,7 @@ let childCurrentProject = ref({
 let showButtonFlag = ref(false);
 const childhandleNodeClick = (data) => {
   childCurrentProject.value = data;
-  console.log("childCurrentProject: ", childCurrentProject);
+  // console.log("childCurrentProject: ", childCurrentProject);
   showButtonFlag.value = true;
 };
 
@@ -418,7 +418,7 @@ const connect = async () => {
 // 标志input框是否修改
 let isRewiriteEditor = ref(false);
 const handlerChange = (e) => {
-  console.log("输入框改变: ", e);
+  // console.log("输入框改变: ", e);
   isRewiriteEditor.value = true;
 };
 onMounted(() => {

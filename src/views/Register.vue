@@ -229,8 +229,8 @@ const checkPhoneNumber = (rule, value, callback) => {
 const onRegister = () => {
   proxy.$refs.registerFormRef.validate(async (valid) => {
     if (valid) {
-      console.log("registerForm:", registerForm);
-      console.log(JSON.stringify(registerForm));
+      // console.log("registerForm:", registerForm);
+      // console.log(JSON.stringify(registerForm));
       // 向后端发送注册信息
       await proxy.$api.register(registerForm);
       // 能得到信息就表示登陆成功，因为提前对返回信息做了处理 13812341234
