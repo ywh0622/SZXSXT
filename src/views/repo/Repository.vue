@@ -1,7 +1,8 @@
 <template>
   <div class="box">
     <el-container>
-      <el-aside width="200px">
+      <!-- 模型仓库页面左侧 -->
+      <el-aside width="250px">
         <el-tree
           :data="projectList"
           :props="projectProps"
@@ -15,8 +16,9 @@
           </template>
         </el-tree>
       </el-aside>
+      <!-- 点击具体的模型仓库后的展示部分，即页面右侧 -->
       <el-main>
-        <div v-if="childProjects == null" style="font-size: 18px">
+        <div v-if="currentModelProjects == null" style="font-size: 18px">
           <div class="div1" v-if="currentModel == null">
             <img src="../../assets/home.png" alt="" style="margin: auto" />
           </div>
@@ -37,7 +39,7 @@
               </template>
               <!-- 文件树 -->
               <el-tree
-                :data="childProjects.childProjects"
+                :data="currentModelProjects.childProjects"
                 :props="childProjectProps"
                 @node-click="childhandleNodeClick"
                 highlight-current
@@ -56,124 +58,12 @@
                 </template>
               </el-tree>
             </el-tab-pane>
-            <!-- Grapha View部分 -->
-            <el-tab-pane>
-              <!-- 标题部分 -->
-              <template #label>
-                <span class="custom-tabs-label">
-                  <el-icon><Link /></el-icon>
-                  <span>Graph View</span>
-                </span>
-              </template>
-              <div v-if="childProjects.childProjects.length > 0">
-                <!-- 图形展示部分 -->
-                <div class="graph">
-                  <div class="circle1" style="margin-right: 0px">
-                    <el-button
-                      @click="drawer = true"
-                      style="margin: auto"
-                      class="drawer-btn"
-                    >
-                      File1
-                    </el-button>
-                  </div>
-                  <div style="margin: auto 0">-------------------></div>
-                  <div
-                    class="circle1"
-                    style="background-color: red; margin: auto 0px"
-                  >
-                    <el-button
-                      @click="drawer = true"
-                      style="margin: auto; background-color: red"
-                      class="drawer-btn"
-                    >
-                      CAD-document
-                    </el-button>
-                  </div>
-                  <div style="margin: auto 0">-------------------></div>
-                  <div
-                    class="circle1"
-                    style="background-color: green; margin-left: 0px"
-                  >
-                    <el-button
-                      @click="drawer = true"
-                      style="margin: auto; background-color: green"
-                      class="drawer-btn"
-                    >
-                      MySQL-document
-                    </el-button>
-                  </div>
-                </div>
-                <!-- 弹出详情部分 -->
-                <el-drawer
-                  title="我是标题"
-                  v-model="drawer"
-                  :with-header="false"
-                >
-                  <el-descriptions
-                    title="Descriptions"
-                    :column="1"
-                    border
-                    style="font-style: normal"
-                  >
-                    <el-descriptions-item
-                      label="Property"
-                      :labelStyle="{
-                        width: '25px',
-                        'font-weight': 'bold',
-                        'font-size': '18px',
-                      }"
-                      :contentStyle="{
-                        'font-weight': 'bold',
-                        'font-size': '18px',
-                      }"
-                    >
-                      Value
-                    </el-descriptions-item>
-                    <el-descriptions-item label="project_id"
-                      >项目id</el-descriptions-item
-                    >
-                    <el-descriptions-item label="project_name"
-                      >项目名字</el-descriptions-item
-                    >
-                    <el-descriptions-item label="project_descriptions"
-                      >项目描述</el-descriptions-item
-                    >
-                    <el-descriptions-item label="project_creattime"
-                      >项目创建时间</el-descriptions-item
-                    >
-                    <el-descriptions-item label="model_id"
-                      >模型id</el-descriptions-item
-                    >
-                    <el-descriptions-item label="model_source"
-                      >模型源头</el-descriptions-item
-                    >
-                    <el-descriptions-item label="moudle_target"
-                      >模型目标</el-descriptions-item
-                    >
-                    <el-descriptions-item label="model_data"
-                      >模型数据类型</el-descriptions-item
-                    >
-                    <el-descriptions-item label="model_url"
-                      >外部模型数据地址</el-descriptions-item
-                    >
-                    <el-descriptions-item label="model_version"
-                      >模型版本</el-descriptions-item
-                    >
-                    <el-descriptions-item label="model_modeified"
-                      >模型修改时间</el-descriptions-item
-                    >
-                  </el-descriptions>
-                </el-drawer>
-              </div>
-              <div v-else>暂无数据</div>
-            </el-tab-pane>
           </el-tabs>
         </div>
       </el-main>
     </el-container>
 
-    <!-- 弹出框部分 -->
+    <!-- 点击查看后的弹出框 -->
     <el-dialog
       v-model="dialogVisible"
       :title="childCurrentProject.showName"
@@ -202,10 +92,9 @@
       <template #footer>
         <span class="dialog-footer">
           <!-- 点击后可修改的内容框改变 -->
-
           <el-button
             type="primary"
-            @click="connect"
+            @click="testConnection"
             v-if="modifiableElementNum > 0"
           >
             修改
@@ -246,6 +135,9 @@ import { ElMessageBox, ElMessage } from "element-plus";
 import { SortUp } from "@element-plus/icons-vue";
 import { useRouter } from "vue-router";
 import { useStore } from "vuex";
+import { inject } from "vue";
+
+const reload = inject("reload");
 const { proxy } = getCurrentInstance();
 const store = useStore();
 const router = useRouter();
@@ -257,39 +149,47 @@ const userAndProject = reactive({
   user: store.state.currentUser,
   project: store.state.selectedProject,
 });
+console.log("userAndProject", userAndProject);
+
+// 左侧 el-tree 获取该项目在所有软件下的模型信息
+let projectList = ref([]);
+const getProjectDetails = async () => {
+  const { code, data, message } = await proxy.$api.getProjectDetails(
+    userAndProject.project.selectedProjectId
+  );
+  if (code == 200) {
+    console.log("data:", data);
+    projectList.value = data;
+  } else {
+    ElMessage.error(message);
+  }
+};
 
 // 左侧 el-tree配置
 const projectProps = {
-  // 目前只有一级目录，没有子目录，所以children不需要启用
   children: "models",
   label: "modelType",
 };
-// 左侧 el-tree 点击事件 点击对应项目后，currentProject为当前点击项目信息,childProjects为当前点击项目信息的子内容
+
+// 左侧 el-tree 点击事件 点击对应项目后，currentModel为当前点击项目软件信息,currentModelProjects为当前点击该项目软件下所属的某个模型
 //
 let currentModel = ref(null);
-let childProjects = ref(null);
+let currentModelProjects = ref(null);
 const handleNodeClick = (data) => {
-  // console.log("父节点信息:", data);
+  console.log("点击左侧 el-tree 父节点信息:", data);
   // 如果该节点下存在modelType属性，就将modelType属性的值赋给currentModel变量
-  if (data.modeltype) {
-    currentModel.value = data.modeltype;
+  if (data.modelType) {
+    currentModel.value = data.modelType;
   }
-  // 如果该节点下存在子项目，就将子项目的值赋给childProjects变量
+  // 如果该节点下存在子项目，就将子项目的值赋给currentModelProjects变量
   if (data.childProjects) {
-    childProjects.value = data;
+    currentModelProjects.value = data;
   } else {
-    childProjects.value = null;
+    currentModelProjects.value = null;
   }
+  console.log("左侧 el-tree currentModel", currentModel);
+  console.log("左侧 el-tree currentModelProjects", currentModelProjects);
 };
-// 左侧 el-tree 通过api获取项目
-let projectList = ref([]);
-const getRepoList = async () => {
-  let tempList = await proxy.$api.getRepoList(userAndProject);
-  // 向接口请求数据，tempList为得到后的数据
-  projectList.value = tempList;
-};
-
-const activeName = ref("first");
 
 // 右侧 Tree View 设置
 // 右侧 el-tree配置
@@ -297,23 +197,23 @@ const childProjectProps = {
   children: "childProjects",
   label: "showName",
 };
+
 // 右侧 el-tree 点击事件 点击对应项目后，childCurrentProject为当前点击项目详细信息
 let childCurrentProject = ref({
   type: "",
   id: "",
 });
-// 点击事件，点击具体的节点时，将该节点的信息赋值给childCurrentProject
-// 并且显示查看按钮
+
+// 点击事件，点击具体的节点时，将该节点的信息赋值给childCurrentProject,并且显示查看按钮
 let showButtonFlag = ref(false);
 const childhandleNodeClick = (data) => {
   childCurrentProject.value = data;
-  // console.log("childCurrentProject: ", childCurrentProject);
+  console.log(
+    "右侧 el-tree 点击事件childCurrentProject: ",
+    childCurrentProject
+  );
   showButtonFlag.value = true;
 };
-
-// 右侧 Graph View 设置
-// drawer控制详情框是否弹出，false不弹出，true弹出
-let drawer = ref(false);
 
 // Tree View页面中 点击查看后弹出相应的内容
 // 控制弹窗是否展示
@@ -326,6 +226,7 @@ const showDetails = () => {
   // 是否显示修改按钮
   childCurrentProject.value.elementDetails.forEach((item) => {
     if (!checkModified(item.Name)) {
+      // 只要存在1个以上可修改的属性，就令modifiableElementNum为1，前端页面就展示这个按钮
       modifiableElementNum.value = 1;
     }
   });
@@ -344,21 +245,28 @@ const handleClose = (done) => {
       // catch error
     });
 };
+
 // 提交修改后的信息
 const changeInfo = () => {
   ElMessageBox.confirm("是否确认提交?")
-    .then(() => {
+    .then(async () => {
       if (isRewiriteEditor.value) {
-        ElMessage({
-          showClose: true,
-          message: "修改成功",
-          type: "success",
-        });
-        dialogVisible.value = false;
-        modifiableElementNum.value = 0;
-        modifyButtonFlag.value = false;
-        returnMsg.value = "正在测试连接";
-        isRewiriteEditor.value = false;
+        const { code, data, message } = await proxy.$api.submitModel();
+        if (code == 200) {
+          ElMessage({
+            showClose: true,
+            message: "修改成功",
+            type: "success",
+          });
+          dialogVisible.value = false;
+          modifiableElementNum.value = 0;
+          modifyButtonFlag.value = false;
+          returnMsg.value = "正在测试连接";
+          isRewiriteEditor.value = false;
+        } else {
+          ElMessage.error(message);
+        }
+        reload();
       } else {
         ElMessage({
           showClose: true,
@@ -375,20 +283,24 @@ const changeInfo = () => {
 // 获取项目中可以修改的属性名
 let modifiableElement = ref([]);
 const getModifiableElement = async () => {
-  let tempModifiableElementList = await proxy.$api.getModifiableElement();
-  // 向接口请求数据，tempList为得到后的数据
-  modifiableElement.value = tempModifiableElementList;
+  const { code, data, message } = await proxy.$api.getModifiableElement();
+  if (code == 200) {
+    modifiableElement.value = data;
+    console.log("项目中可以修改的属性名: ", data);
+  } else {
+    ElMessage.error(message);
+  }
 };
 
-// xml属性是否可以修改判断，返回true代表不可以修改，false为可修改
-const checkModified = (tagName) => {
+// 属性是否可以修改判断，返回true代表不可以修改，false为可修改
+const checkModified = (element) => {
   let flag = true;
   modifiableElement.value.forEach((item) => {
     if (item["modelType"] === currentModel.value) {
       item["attribute"].forEach((item1) => {
         if (
-          item1["tagName"] == childCurrentProject.value["tagName"] &&
-          item1["modifiableName"] == tagName
+          item1["type"] == childCurrentProject.value["type"] &&
+          item1["modifiableName"] == element
         ) {
           flag = false;
         }
@@ -401,17 +313,17 @@ const checkModified = (tagName) => {
 // 点击修改后，可修改的内容框可以点击并且与后端进行连接测试
 let modifyButtonFlag = ref(false);
 let returnMsg = ref("正在测试连接");
-const connect = async () => {
+
+const testConnection = async () => {
   // 可修改的内容框可以进行修改
   modifyButtonFlag.value = true;
   // 与后端进行连接测试
-  let testConnectionFlag = await proxy.$api.testConnection();
-  if (testConnectionFlag === "success") {
+  const { code, data, message } = await proxy.$api.testConnection();
+  if (code == 200) {
     returnMsg.value = "连接成功";
   } else {
-    returnMsg.value = "连接失败";
+    ElMessage.error(message);
   }
-  // 如果连接成功，则关闭按钮变为保存
 };
 
 // 查看框中 每次input框的数据发生改变，该函数都会执行一次
@@ -421,9 +333,10 @@ const handlerChange = (e) => {
   // console.log("输入框改变: ", e);
   isRewiriteEditor.value = true;
 };
+
 onMounted(() => {
   // 该组件被启用时就要调用获取项目总数函数
-  getRepoList();
+  getProjectDetails();
   getModifiableElement();
 });
 </script>

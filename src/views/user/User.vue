@@ -1,9 +1,8 @@
 <template>
-  <div class="user-main" v-if="currentUserLevel == '1'">
-    <!-- 最顶部 新增和搜索区域 -->
-    <!-- <div class="user-header">
-      <el-button type="primary" @click="handleAdd"> 邀请用户 </el-button>
-    </div> -->
+  <div
+    class="user-main"
+    v-if="currentUserLevel == '2' || currentUserLevel == '3'"
+  >
     <!-- 用户数据展示区域 -->
     <div class="table">
       <el-table :data="list" style="width: 100%" height="500px">
@@ -16,9 +15,13 @@
           :width="item.width"
         />
         <!-- 用户信息操作栏 -->
-        <el-table-column fixed="right" label="操作" width="180">
+        <el-table-column fixed="right" label="操作" width="250">
           <template #default="scope">
-            <el-button size="small" @click="handleEdit(scope.row)">
+            <el-button
+              size="small"
+              @click="handleEdit(scope.row)"
+              v-if="currentUserLevel == '2'"
+            >
               分配权限
             </el-button>
             <el-button
@@ -26,7 +29,8 @@
               size="small"
               @click="handleDelete(scope.row)"
             >
-              移除用户
+              <span v-if="currentUserLevel == '2'">移出项目组</span>
+              <span v-if="currentUserLevel == '3'">删除用户</span>
             </el-button>
           </template>
         </el-table-column>
@@ -42,15 +46,6 @@
         class="pager mt-4"
       />
     </div>
-    <!-- 邀请用户提示框 -->
-    <el-dialog
-      v-model="dialogVisible"
-      title="邀请用户"
-      width="35%"
-      :before-close="handleClose"
-    >
-      table
-    </el-dialog>
     <!-- 显示用户权限 -->
     <el-drawer v-model="drawer" :before-close="handleUserLevelClose">
       <template #header>
@@ -74,17 +69,17 @@
       </el-form>
     </el-drawer>
   </div>
-  <div class="user-main" v-if="currentUserLevel == 'MA'">
-    您暂无权限查看此页面
-  </div>
+  <div class="user-main" v-else>您暂无权限查看此页面</div>
 </template>
 
 <script setup>
 import { getCurrentInstance, onMounted, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useStore } from "vuex";
-import { ElMessageBox, ElMessage } from "element-plus";
+import { ElMessageBox, ElMessage, formatter } from "element-plus";
+import { inject } from "vue";
 
+const reload = inject("reload");
 const { proxy } = getCurrentInstance();
 const store = useStore();
 const router = useRouter();
@@ -101,8 +96,6 @@ const userAndProject = reactive({
   project: store.state.selectedProject,
 });
 
-// 控制邀请用户提示框的显示与隐藏
-const dialogVisible = ref(false);
 // 显示用户权限的显示与隐藏
 const drawer = ref(false);
 
@@ -119,11 +112,6 @@ const tableLabel = reactive([
     label: "部门",
     width: 230,
   },
-  // {
-  //   prop: "email",
-  //   label: "邮箱",
-  //   width: 230,
-  // },
   {
     prop: "phoneNum",
     label: "手机号",
@@ -135,6 +123,7 @@ const tableLabel = reactive([
     width: 350,
   },
 ]);
+
 // 分页配置
 const config = reactive({
   total: 0,
@@ -145,107 +134,71 @@ const config = reactive({
 
 // 获取用户信息
 async function getUserData(config) {
-  let res = await proxy.$api.changeUserLevel(userAndProject);
-  // 获取信息总行数，页面中页码需要提前获取到总数量
-  config.total = res.count;
-  list.value = res.userList.map((item) => {
-    // 手动生成item["ownAuthority"]即前端的已拥有的权限
-    item["ownAuthority"] = "";
-    item["authority"].forEach((element) => {
-      if (element["hasAuthority"]) {
-        item["ownAuthority"] += element["modelType"] + " ";
-      }
+  // 登陆用户为管理员
+  if (currentUserLevel == "3") {
+    const { code, data, message } = await proxy.$api.getUserDetails();
+    console.log("code, data, message:", code, data, message);
+    // 获取信息总行数，页面中页码需要提前获取到总数量
+    config.total = data.count;
+    list.value = data.map((item) => {
+      // 手动生成item["ownAuthority"]即前端页面显示item.username该用户已拥有的权限
+      item["ownAuthority"] = "";
+      return item;
     });
-    return item;
-  });
+  } else {
+    // 登陆用户非管理员
+    const { code, data, message } = await proxy.$api.getUserLevel(
+      userAndProject
+    );
+    console.log("code, data, message:", code, data, message);
+    // 获取信息总行数，页面中页码需要提前获取到总数量
+    config.total = data.count;
+    list.value = data.userList.map((item) => {
+      // 手动生成item["ownAuthority"]即前端页面显示item.username该用户已拥有的权限
+      item["ownAuthority"] = "";
+      item["authority"].forEach((element) => {
+        if (element["hasAuthority"]) {
+          item["ownAuthority"] += element["modelType"] + ", ";
+        }
+      });
+      return item;
+    });
+  }
 }
 
 // 改变页码
 const changePage = (page) => {
-  // console.log(page );
   config.page = page;
   getUserData(config);
 };
 
-// 邀请用户
-const handleAdd = () => {
-  dialogVisible.value = true;
-};
-
-//--------------------------
-// 点击邀请用户提示框对话的x
-const handleClose = (done) => {
-  ElMessageBox.confirm("确定关闭吗?")
-    .then(() => {
-      // resetFields需要在el-form-item标签体内添加属性prop
-      // proxy.$refs.userForm.resetFields();
-      done();
-    })
-    .catch(() => {
-      // catch error
-    });
-};
-
-// 点击邀请用户提示框 表单页面点击取消后，清除表单上面的内容 包括填写的内容和报错提示
-const handleCancel = () => {
-  dialogVisible.value = false;
-  // resetFields需要在el-form-item标签体内添加属性prop
-  proxy.$refs.userForm.resetFields();
-};
-
-//--------------------------
-// 修改用户权限的数据
-const formUser = reactive({
+// 当用户点击表格中分配权限或者修改密码时，这个formUser就表示用户选中的那个人
+const formUser = ref({
   username: "",
   phoneNum: 1,
   email: "",
   department: "",
   authority: [],
+  userId: "",
 });
 
 // 显示用户权限抽屉
 const handleEdit = (row) => {
   drawer.value = true;
-  // console.log('handleEdit',row)
-  // 下面的代码会将得到数据展示到打开的输入框中
-  // 如果不加入nexttick函数，直接使用浅拷贝Object.assign(formUser,row)的话
-  // 点击编辑后，会将说点击的用户信息显示在编辑框中，但是在关闭这个对话框后
-  // 再次点击新增按钮后,弹出的新增框中也会有之前编辑的用户所有信息，
-  // 所以为了避免这个情况的发生，需要将浅拷贝放到nextTicK函数中
-  proxy.$nextTick(() => {
-    // 浅拷贝
-    Object.assign(formUser, row);
-  });
+  formUser.value = row;
 };
 
 // 点击取消 关闭用户权限抽屉
 function cancelClick() {
   drawer.value = false;
-  window.location.reload();
-}
-
-// 点击确定 关闭用户权限抽屉
-function onSubmit() {
-  ElMessageBox.confirm("确定关闭?")
-    .then(() => {
-      drawer.value = false;
-      window.location.reload();
-      ElMessage({
-        showClose: true,
-        message: "修改成功",
-        type: "success",
-      });
-    })
-    .catch(() => {
-      // catch error
-    });
+  reload();
 }
 
 // 点击修改用户权限提示框对话的x
 const handleUserLevelClose = (done) => {
   ElMessageBox.confirm("确定关闭?")
     .then(() => {
-      window.location.reload();
+      reload();
       done();
     })
     .catch(() => {
@@ -253,26 +206,91 @@ const handleUserLevelClose = (done) => {
     });
 };
 
-// 删除用户
+// 对用户权限的修改或者移出项目组的数据，userLevelData直接发送个后端
+const userLevelData = reactive({
+  userId: "",
+  project_id: "",
+  modelPermission: "",
+});
+
+// 点击修改 提交修改的数据并关闭用户权限抽屉
+const onSubmit = () => {
+  ElMessageBox.confirm("确定修改吗?")
+    .then(async () => {
+      // 封装PA用户修改的信息 0表示无权限 1表示有权限 modelPermission共32位，前九位分别表示各种模型的权限
+      let modelPermission = "";
+      formUser.value.authority.forEach((element) => {
+        if (element["hasAuthority"]) {
+          modelPermission += "1";
+        } else {
+          modelPermission += "0";
+        }
+      });
+      for (let index = modelPermission.length + 1; index <= 32; index++) {
+        modelPermission += "0";
+      }
+      // 封装数据
+      userLevelData.modelPermission = modelPermission;
+      userLevelData.project_id = userAndProject.project.selectedProjectId;
+      userLevelData.userId = formUser.value.userId;
+      // 发送请求
+      const { code, data, message } = await proxy.$api.changeUserLevel(
+        userLevelData
+      );
+      if (code === 200) {
+        drawer.value = false;
+        reload();
+        ElMessage({
+          showClose: true,
+          message: "用户权限修改成功",
+          type: "success",
+        });
+      } else {
+        ElMessage.error(message);
+      }
+    })
+    .catch(() => {});
+};
+
+// 移除或者删除用户
 const handleDelete = (row) => {
   ElMessageBox.confirm("确定删除?")
     .then(async () => {
-      const deletedUser = {
-        username: row.username,
-        department: row.department,
-        email: row.email,
-        phoneNum: row.phoneNum,
-        currentUser: userAndProject.user,
-        currentProject: userAndProject.project.selectedProject,
-        currentProjectId: userAndProject.project.selectedProjectId,
-      };
-      await proxy.$api.deleteUser(deletedUser);
-      ElMessage({
-        showClose: true,
-        message: "删除成功",
-        type: "success",
-      });
-      window.location.reload();
+      console.log("row", row);
+      console.log("currentUserLevel", currentUserLevel);
+      if (currentUserLevel == "3") {
+        const form_data = new FormData();
+        form_data.append("user_id", row.id);
+        const { code, data, message } = await proxy.$api.deleteUser(form_data);
+        if (code === 200) {
+          ElMessage({
+            showClose: true,
+            message: "删除用户成功",
+            type: "success",
+          });
+          reload();
+        } else {
+          ElMessage.error(message);
+        }
+      } else {
+        const form_data = new FormData();
+        form_data.append("user_id", row.id);
+        form_data.append(
+          "project_id",
+          userAndProject.project.selectedProjectId
+        );
+        const { code, data, message } = await proxy.$api.removeUser(form_data);
+        if (code === 200) {
+          ElMessage({
+            showClose: true,
+            message: "移除用户成功",
+            type: "success",
+          });
+          reload();
+        } else {
+          ElMessage.error(message);
+        }
+      }
     })
     .catch(() => {});
 };

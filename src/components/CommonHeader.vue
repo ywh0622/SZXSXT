@@ -66,6 +66,7 @@
         <el-input
           v-model="passwordDetail.orignPassword"
           placeholder="请输入原密码"
+          type="password"
         />
       </el-form-item>
 
@@ -119,12 +120,14 @@
 </template>
 
 <script setup>
-import { getCurrentInstance, onMounted, reactive, ref } from "vue";
+import { getCurrentInstance, reactive, ref } from "vue";
 import { useStore } from "vuex";
 import { computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { ElMessageBox, ElMessage } from "element-plus";
+import { inject } from "vue";
 
+const reload = inject("reload");
 const { proxy } = getCurrentInstance();
 const store = useStore();
 const router = useRouter();
@@ -173,7 +176,7 @@ const passwordDetail = reactive({
 const handleClose = (done) => {
   ElMessageBox.confirm("确定关闭?")
     .then(() => {
-      window.location.reload();
+      reload();
       done();
     })
     .catch(() => {
@@ -183,26 +186,34 @@ const handleClose = (done) => {
 
 // 点击取消 关闭用户权限抽屉
 function cancelClick() {
-  window.location.reload();
+  reload();
   drawer.value = false;
 }
 
 // 点击确定 关闭用户权限抽屉
-function onSubmit() {
+const onSubmit = () => {
   proxy.$refs.changePasswordRef.validate(async (valid) => {
     if (valid) {
+      // 封装前端数据为form-data格式，发送给后端
+      const form_data = new FormData();
+      form_data.append("username", username);
+      form_data.append("new_password", passwordDetail.newPassword);
       // 向后端发送新密码
-
-      // 关闭抽屉
-      drawer.value = false;
-      // 重新加载页面
-      window.location.reload();
-      // 显示修改成功信息
-      ElMessage({
-        showClose: true,
-        message: "密码修改成功",
-        type: "success",
-      });
+      const data = await proxy.$api.changePassword(form_data);
+      if (data.code === 200) {
+        // 关闭抽屉
+        drawer.value = false;
+        // 返回登陆页面
+        handleLoginOut();
+        // 显示修改成功信息
+        ElMessage({
+          showClose: true,
+          message: "密码修改成功",
+          type: "success",
+        });
+      } else {
+        ElMessage.error(data.message);
+      }
     } else {
       ElMessage({
         showClose: true,
@@ -211,7 +222,7 @@ function onSubmit() {
       });
     }
   });
-}
+};
 
 // 退出账号 清除localstorage信息
 const handleLoginOut = () => {

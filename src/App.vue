@@ -1,14 +1,17 @@
 <template>
-  <router-view></router-view>
+  <router-view v-if="isRouter" />
 </template>
 
 <script setup>
-// import { useRouter } from "vue-router";
-// import { useStore } from "vuex";
-
-// const store = useStore();
-// const router = useRouter();
-// store.commit("addMenu", router);
+import { nextTick, provide, ref } from "vue";
+const isRouter = ref(true);
+const reload = () => {
+  isRouter.value = false;
+  nextTick(() => {
+    isRouter.value = true;
+  });
+};
+provide("reload", reload);
 </script>
 
 <style>

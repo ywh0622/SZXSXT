@@ -120,42 +120,36 @@ const router = useRouter();
 const login = () => {
   proxy.$refs.loginFormRef.validate(async (valid) => {
     if (valid) {
-      //--------------------------------------------------
-      // 旧版登陆代码 后期删除
-      // const res = await proxy.$api.getMenu(loginForm);
-      // console.log("res.menu", res.menu);
-      // console.log("res", res);
-      // store.commit("setMenu", res.menu);
-      // store.commit("addMenu", router);
-      // store.commit("setToken", res.token);
-      //--------------------------------------------------
       // console.log("用户信息为:", loginForm);
       // 修改为form-data数据格式发送给后端
       const form_data = new FormData();
       form_data.append("username", loginForm.username);
       form_data.append("password", loginForm.password);
-      const data = await proxy.$api.login(form_data);
-      console.log("data", data);
-      // 能得到信息就表示登陆成功，因为提前对返回信息做了处理
-      // 如果code！=200,会直接提示登陆失败
-      // 将用户的菜单保存到store中的menu变量和浏览器中
-      store.commit("setMenu", menuPath);
-      store.commit("addMenu", router);
-      // 设置登陆token
-      store.commit("setToken", Mock.Random.guid());
-      // 将当前用户名称和用户所拥有的项目传入store中
-      store.commit("setCurrentUser", loginForm.username);
-      store.commit("setCurrentUserProjectList", data.projectList);
-      // 跳转到项目选择页面
-      router.push({
-        name: "projectSelect",
-      });
-      // 输出成功信息
-      ElMessage({
-        showClose: true,
-        message: "登陆成功,请选择项目",
-        type: "success",
-      });
+      const { code, data, message } = await proxy.$api.login(form_data);
+      console.log("code, data, message", code, data, message);
+      if (code === 200) {
+        // 如果code ==200, 表示登陆成功
+        // 将用户的菜单保存到store中的menu变量和浏览器中
+        store.commit("setMenu", menuPath);
+        store.commit("addMenu", router);
+        // 设置登陆token
+        store.commit("setToken", Mock.Random.guid());
+        // 将当前用户名称和用户所拥有的项目传入store中
+        store.commit("setCurrentUser", loginForm.username);
+        store.commit("setCurrentUserProjectList", data.projectList);
+        // 跳转到项目选择页面
+        router.push({
+          name: "projectSelect",
+        });
+        // 输出成功信息
+        ElMessage({
+          showClose: true,
+          message: "登陆成功,请选择项目",
+          type: "success",
+        });
+      } else {
+        ElMessage.error(message);
+      }
     } else {
       ElMessage({
         showClose: true,
@@ -171,7 +165,6 @@ const userRegister = () => {
   router.push({
     name: "reg",
   });
-  // console.log(router);
 };
 </script>
 

@@ -53,42 +53,9 @@ import { useStore } from "vuex";
 const router = useRouter();
 const store = useStore();
 
-// const list = [
-//   {
-//     path: "/user",
-//     name: "user",
-//     label: "用户管理",
-//     icon: "user",
-//     url: "UserManage/UserManage",
-//   },
-//   {
-//     label: "其他",
-//     icon: "location",
-//     path: "/other",
-//     children: [
-//       {
-//         path: "/page1",
-//         name: "page1",
-//         label: "页面1",
-//         icon: "setting",
-//         url: "Other/PageOne",
-//       },
-//       {
-//         path: "/page2",
-//         name: "page2",
-//         label: "页面2",
-//         icon: "setting",
-//         url: "Other/PageTwo",
-//       },
-//     ],
-//   },
-// ];
-
 function noChildren() {
   // 子菜单判断
   return asyncList.filter((item) => {
-    // console.log('noChildren-item',item);
-    // console.log('noChildren-item.children',item.children);
     return !item.children;
   });
 }
@@ -96,8 +63,6 @@ function noChildren() {
 // 子菜单判断
 function hasChildren() {
   return asyncList.filter((item) => {
-    // console.log('noChildren-item',item);
-    // console.log('noChildren-item.children',item.children);
     return item.children;
   });
 }

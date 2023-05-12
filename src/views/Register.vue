@@ -14,7 +14,7 @@
       >
         <el-form-item
           label="用户名"
-          prop="username"
+          prop="userName"
           :rules="[
             {
               required: true,
@@ -23,7 +23,7 @@
           ]"
         >
           <el-input
-            v-model="registerForm.username"
+            v-model="registerForm.userName"
             placeholder="请输入用户名"
           />
         </el-form-item>
@@ -93,9 +93,9 @@
           ]"
         >
           <el-radio-group v-model="registerForm.role">
-            <el-radio :label="0">项目管理员</el-radio>
+            <el-radio :label="2">项目管理员</el-radio>
             <el-radio :label="1">模型管理员</el-radio>
-            <el-radio :label="2">游客</el-radio>
+            <el-radio :label="0">游客</el-radio>
           </el-radio-group>
         </el-form-item>
 
@@ -109,16 +109,12 @@
         <el-form-item
           label="项目代码"
           prop="projectId"
-          :rules="[
-            {
-              required: true,
-              message: '项目代码不能为空',
-            },
-          ]"
+          :rules="[{ required: true, message: '项目代码不能为空' }]"
         >
           <el-input
             v-model="registerForm.projectId"
-            placeholder="请输入项目代码"
+            placeholder="项目管理员无需填写"
+            :disabled="registerForm.role == 2 ? true : false"
           />
         </el-form-item>
 
@@ -183,13 +179,13 @@ const router = useRouter();
 
 // 表单信息，用户最后提交的注册信息
 const registerForm = reactive({
-  username: "",
+  userName: "",
   password: "",
   confirmPassword: "",
   trueName: "",
-  role: 0,
+  role: 2,
   department: "",
-  projectId: "",
+  projectId: "项目管理员无需填写",
   email: "",
   phone: "",
 });
@@ -229,20 +225,25 @@ const checkPhoneNumber = (rule, value, callback) => {
 const onRegister = () => {
   proxy.$refs.registerFormRef.validate(async (valid) => {
     if (valid) {
-      // console.log("registerForm:", registerForm);
-      // console.log(JSON.stringify(registerForm));
       // 向后端发送注册信息
-      await proxy.$api.register(registerForm);
-      // 能得到信息就表示登陆成功，因为提前对返回信息做了处理 13812341234
-      // 如果code！=200,会直接提示登陆失败
-      router.push({
-        name: "login",
-      });
-      ElMessage({
-        showClose: true,
-        message: "注册成功",
-        type: "success",
-      });
+      // 项目管理员无需填写项目Id，所以需要将前端收集的项目代码进行过滤
+      if (registerForm.role == 2) {
+        registerForm.projectId = null;
+      }
+      const data = await proxy.$api.register(registerForm);
+      // 如果code ==200, 表示注册成功
+      if (data.code === 200) {
+        router.push({
+          name: "login",
+        });
+        ElMessage({
+          showClose: true,
+          message: "注册成功",
+          type: "success",
+        });
+      } else {
+        ElMessage.error(data.message);
+      }
     } else {
       ElMessage({
         showClose: true,
