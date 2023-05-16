@@ -125,6 +125,58 @@ export default {
             data:params
         })
     },
+    // 可邀请的用户列表 未完成
+    getInviteUserList(params){
+        return request({
+            url: '/invited/users',
+            method: 'get',
+            // 真实上线或者请求服务器接口需要改成false
+            mock:true,
+            data:params
+        })
+    },
+    // 邀请用户加入项目 未完成
+    inviteUser(params){
+        return request({
+            url: '/invited/user',
+            method: 'post',
+            // 真实上线或者请求服务器接口需要改成false
+            mock:true,
+            data:params
+        })
+    },
+    // 收到项目的邀请信息列表 未完成
+    getInviteProjectList(params){
+        return request({
+            url: '/invited/projetcts',
+            method: 'get',
+            // 真实上线或者请求服务器接口需要改成false
+            mock:true,
+            data:params
+        })
+    },
+    // 加入项目组 未完成
+    jointProject(params){
+        return request({
+            url: '/invited/project',
+            method: 'post',
+            // 真实上线或者请求服务器接口需要改成false
+            mock:true,
+            data:params
+        })
+    },
+    // 拒绝加入项目组 未完成
+    refuseJointProject(params){
+        return request({
+            url: '/invited/projetct/refuse',
+            method: 'post',
+            // 真实上线或者请求服务器接口需要改成false
+            mock:true,
+            data:params
+        })
+    },
+
+
     // 与后端进行连接测试 测试 可删除
     testPut(params){
         return request({
