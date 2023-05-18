@@ -175,6 +175,26 @@ export default {
             data:params
         })
     },
+    // 查看当前登陆用户对项目各软件的操作权限 未完成
+    getProjectModelAuthority(params){
+        return request({
+            url: '/project/model',
+            method: 'get',
+            // 真实上线或者请求服务器接口需要改成false
+            mock:true,
+            data:params
+        })
+    },
+    // 上传文件 未完成
+    uploadFile(params){
+        return request({
+            url: '/upload',
+            method: 'post',
+            // 真实上线或者请求服务器接口需要改成false
+            mock:true,
+            data:params
+        })
+    },
 
 
     // 与后端进行连接测试 测试 可删除

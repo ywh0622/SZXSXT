@@ -13,6 +13,16 @@
           <template #default="{ data }">
             <component class="icons" :is="data.icon"></component>
             <span style="margin-left: 10px">{{ data.showName }}</span>
+            <el-button
+              style="margin-left: 15px"
+              size="small"
+              @click="uploadDialog"
+              v-if="
+                data.showName == currentModel &&
+                (currentUserLevel == '2' || hasAuthority == true)
+              "
+              >上传</el-button
+            >
           </template>
         </el-tree>
       </el-aside>
@@ -126,6 +136,74 @@
         </span>
       </template>
     </el-dialog>
+
+    <!-- 上传文件框 -->
+    <el-dialog
+      v-model="uploadDialogVisible"
+      title="上传文件"
+      width="30%"
+      :before-close="uploadHandleClose"
+    >
+      <el-form
+        :model="uploadData"
+        label-width="90px"
+        require-asterisk-position="left"
+        ref="uploadDataFormRef"
+      >
+        <el-form-item label="软件类型" prop="modelType">
+          <el-input v-model="uploadData.modelType" disabled />
+        </el-form-item>
+        <el-form-item
+          label="上传方式"
+          prop="createNewModel"
+          :rules="[
+            {
+              required: true,
+              message: '上传方式不能为空',
+            },
+          ]"
+        >
+          <el-select
+            v-model="uploadData.createNewModel"
+            placeholder="选择上传方式"
+          >
+            <el-option label="创建新模型" value="0" />
+            <el-option label="覆盖旧模型" value="1" />
+          </el-select>
+        </el-form-item>
+        <el-form-item
+          label="上传文件"
+          prop="file"
+          :rules="[
+            {
+              required: true,
+              message: '上传文件不能为空',
+            },
+          ]"
+        >
+          <el-upload
+            action="none"
+            multiple
+            accept=".json"
+            v-model:file-list="uploadData.file"
+            :auto-upload="false"
+            :limit="1"
+          >
+            <template #trigger>
+              <el-button type="primary" size="default">select file</el-button>
+            </template>
+            <template #tip>
+              <div class="el-upload__tip">只支持上传json格式的文件.</div>
+            </template>
+          </el-upload>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button type="primary" @click="uploadFile"> 确认上传 </el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -151,6 +229,12 @@ const userAndProject = reactive({
 });
 console.log("userAndProject", userAndProject);
 
+// 获取当前登陆用户对该项目的权限
+store.commit("getCurrentUserLevel");
+const currentUserLevel = store.state.currentUserLevel;
+
+// 左侧树形图
+// ------------------------------------------
 // 左侧 el-tree 获取该项目在所有软件下的模型信息
 let projectList = ref([]);
 const getProjectDetails = async () => {
@@ -189,9 +273,15 @@ const handleNodeClick = (data) => {
   }
   console.log("左侧 el-tree currentModel", currentModel);
   console.log("左侧 el-tree currentModelProjects", currentModelProjects);
+  // 点击了左侧项目软件根节点
+  isClickModel.value = true;
+  // 判断该用户是否有上传权限
+  isHoldAuthority2Upload();
 };
+// ------------------------------------------
 
 // 右侧 Tree View 设置
+// ------------------------------------------
 // 右侧 el-tree配置
 const childProjectProps = {
   children: "childProjects",
@@ -222,7 +312,6 @@ const dialogVisible = ref(false);
 // modifiableElementNum表示打开的标签属性中可以修改的属性数量，数量等于1时，打开的显示框中才会显示修改按钮
 let modifiableElementNum = ref(0);
 const showDetails = () => {
-  dialogVisible.value = true;
   // 是否显示修改按钮
   childCurrentProject.value.elementDetails.forEach((item) => {
     if (!checkModified(item.Name)) {
@@ -230,6 +319,8 @@ const showDetails = () => {
       modifiableElementNum.value = 1;
     }
   });
+  // 将dialogVisible设置为true 使窗口出现
+  dialogVisible.value = true;
 };
 
 // 点击关闭后触发该事件
@@ -334,10 +425,101 @@ const handlerChange = (e) => {
   isRewiriteEditor.value = true;
 };
 
+// 上传文件代码部分
+
+// 判断用户是否点击了左侧项目软件根节点
+const isClickModel = ref(false);
+
+// 获取MA用户对项目各软件的操作权限
+const projectModelAuthorityList = ref(null);
+const getProjectModelAuthority = async () => {
+  const { code, data, message } = await proxy.$api.getProjectModelAuthority();
+  if (code == 200) {
+    projectModelAuthorityList.value = data;
+    console.log("用户对该项目各软件的权限: ", projectModelAuthorityList.value);
+  } else {
+    ElMessage.error(message);
+  }
+};
+
+// 判断该用户是否有上传权限，PA用户无需判断即可显示上传按钮
+// MA用户需要判断是否对该项目指定软件存在上传模型功能
+const hasAuthority = ref(false);
+const isHoldAuthority2Upload = async () => {
+  hasAuthority.value = false;
+  console.log("currentUserLevel:", currentUserLevel);
+  if (currentUserLevel == "1") {
+    projectModelAuthorityList.value.forEach((item) => {
+      if (item["modelType"] == currentModel.value && item["hasAuthority"]) {
+        hasAuthority.value = true;
+      }
+    });
+  }
+};
+
+// 上传文件框显示与否判断
+const uploadDialogVisible = ref(false);
+const uploadData = reactive({
+  modelType: "",
+  createNewModel: "",
+  file: [],
+});
+
+// 点击上传按钮后打开上传提示框
+const uploadDialog = () => {
+  uploadDialogVisible.value = true;
+  uploadData.modelType = currentModel;
+};
+
+// 点击关闭后触发该事件
+const uploadHandleClose = (done) => {
+  ElMessageBox.confirm("确认关闭该窗口?")
+    .then(() => {
+      uploadDialogVisible.value = false;
+      // 重置表单
+      proxy.$refs.uploadDataFormRef.resetFields();
+    })
+    .catch(() => {
+      // catch error
+    });
+};
+
+// 上传文件
+const uploadFile = () => {
+  proxy.$refs.uploadDataFormRef.validate(async (valid) => {
+    if (valid) {
+      // 向后端发送信息
+      const form_data = new FormData();
+      form_data.append("modelType", uploadData.modelType);
+      form_data.append("createNewModel", uploadData.createNewModel);
+      uploadData.file.forEach((v) => {
+        console.log("file: ", v);
+        form_data.append("file", v.raw);
+      });
+      // 关闭上传文件退出框
+      uploadDialogVisible.value = false;
+      // 重置表单
+      proxy.$refs.uploadDataFormRef.resetFields();
+      reload();
+    } else {
+      ElMessage({
+        showClose: true,
+        message: "请输入正确的内容",
+        type: "error",
+      });
+    }
+  });
+};
+// ------------------------------------------
+
 onMounted(() => {
   // 该组件被启用时就要调用获取项目总数函数
   getProjectDetails();
   getModifiableElement();
+  // MA 用户才需要
+  if (currentUserLevel == "1") {
+    getProjectModelAuthority();
+  }
 });
 </script>
 
