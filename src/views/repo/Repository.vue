@@ -12,7 +12,16 @@
         >
           <template #default="{ data }">
             <component class="icons" :is="data.icon"></component>
-            <span style="margin-left: 10px">{{ data.showName }}</span>
+            <el-tooltip
+              class="box-item"
+              effect="dark"
+              :content="data.showName"
+              :show-after="1000"
+              placement="bottom-start"
+            >
+              <span style="margin-left: 10px">{{ data.showName }}</span>
+            </el-tooltip>
+
             <el-button
               style="margin-left: 15px"
               size="small"
@@ -84,7 +93,7 @@
       :show-close="false"
     >
       <!-- 标签体属性展示 -->
-      <el-form :model="childCurrentProject.elementDetails" label-width="80px">
+      <el-form :model="childCurrentProject.elementDetails" label-width="110px">
         <el-form-item
           v-for="(item, idx) in childCurrentProject.elementDetails"
           :key="idx"
@@ -144,60 +153,131 @@
       width="30%"
       :before-close="uploadHandleClose"
     >
-      <el-form
-        :model="uploadData"
-        label-width="90px"
-        require-asterisk-position="left"
-        ref="uploadDataFormRef"
-      >
-        <el-form-item label="软件类型" prop="modelType">
-          <el-input v-model="uploadData.modelType" disabled />
-        </el-form-item>
-        <el-form-item
-          label="上传方式"
-          prop="createNewModel"
-          :rules="[
-            {
-              required: true,
-              message: '上传方式不能为空',
-            },
-          ]"
-        >
-          <el-select
-            v-model="uploadData.createNewModel"
-            placeholder="选择上传方式"
+      <el-tabs type="border-card">
+        <el-tab-pane label="创建新模型">
+          <el-form
+            :model="uploadData"
+            label-width="90px"
+            require-asterisk-position="left"
+            ref="uploadDataFormRef"
           >
-            <el-option label="创建新模型" value="0" />
-            <el-option label="覆盖旧模型" value="1" />
-          </el-select>
-        </el-form-item>
-        <el-form-item
-          label="上传文件"
-          prop="file"
-          :rules="[
-            {
-              required: true,
-              message: '上传文件不能为空',
-            },
-          ]"
-        >
-          <el-upload
-            action="none"
-            multiple
-            accept=".json"
-            v-model:file-list="uploadData.file"
-            :auto-upload="false"
-            :limit="1"
+            <el-form-item label="软件类型" prop="modelType">
+              <el-input v-model="uploadData.modelType" disabled />
+            </el-form-item>
+            <el-form-item
+              label="上传文件"
+              prop="file"
+              :rules="[
+                {
+                  required: true,
+                  message: '上传文件不能为空',
+                },
+              ]"
+            >
+              <el-upload
+                action="none"
+                multiple
+                accept=".json"
+                v-model:file-list="uploadData.file"
+                :auto-upload="false"
+                :limit="1"
+              >
+                <template #trigger>
+                  <el-button type="primary" size="default"
+                    >select file</el-button
+                  >
+                </template>
+                <template #tip>
+                  <div class="el-upload__tip">只支持上传json格式的文件.</div>
+                </template>
+              </el-upload>
+            </el-form-item>
+            <el-form-item
+              label="文件描述"
+              prop="desc"
+              :rules="[
+                {
+                  required: true,
+                  message: '文件描述不能为空',
+                },
+              ]"
+            >
+              <el-input v-model="uploadData.desc" type="textarea" />
+            </el-form-item>
+          </el-form>
+        </el-tab-pane>
+        <el-tab-pane label="覆盖旧模型">
+          <el-form
+            :model="uploadData"
+            label-width="90px"
+            require-asterisk-position="left"
+            ref="uploadDataFormRef"
           >
-            <template #trigger>
-              <el-button type="primary" size="default">select file</el-button>
-            </template>
-            <template #tip>
-              <div class="el-upload__tip">只支持上传json格式的文件.</div>
-            </template>
-          </el-upload>
-        </el-form-item>
-      </el-form>
+            <el-form-item label="软件类型" prop="modelType">
+              <el-input v-model="uploadData.modelType" disabled />
+            </el-form-item>
+            <el-form-item
+              label="上传方式"
+              prop="createNewModel"
+              :rules="[
+                {
+                  required: true,
+                  message: '上传方式不能为空',
+                },
+              ]"
+            >
+              <el-select
+                v-model="uploadData.createNewModel"
+                placeholder="选择上传方式"
+              >
+                <el-option label="创建新版本" value="0" />
+                <el-option label="覆盖旧版本" value="1" />
+              </el-select>
+            </el-form-item>
+            <el-form-item
+              label="上传文件"
+              prop="file"
+              :rules="[
+                {
+                  required: true,
+                  message: '上传文件不能为空',
+                },
+              ]"
+            >
+              <el-upload
+                action="none"
+                multiple
+                accept=".json"
+                v-model:file-list="uploadData.file"
+                :auto-upload="false"
+                :limit="1"
+              >
+                <template #trigger>
+                  <el-button type="primary" size="default"
+                    >select file</el-button
+                  >
+                </template>
+                <template #tip>
+                  <div class="el-upload__tip">只支持上传json格式的文件.</div>
+                </template>
+              </el-upload>
+            </el-form-item>
+            <el-form-item
+              label="文件描述"
+              prop="desc"
+              :rules="[
+                {
+                  required: true,
+                  message: '文件描述不能为空',
+                },
+              ]"
+            >
+              <el-input v-model="uploadData.desc" type="textarea" />
+            </el-form-item>
+          </el-form>
+        </el-tab-pane>
+      </el-tabs>
+
       <template #footer>
         <span class="dialog-footer">
           <el-button type="primary" @click="uploadFile"> 确认上传 </el-button>
@@ -252,7 +332,7 @@ const getProjectDetails = async () => {
 // 左侧 el-tree配置
 const projectProps = {
   children: "models",
-  label: "modelType",
+  label: "showName",
 };
 
 // 左侧 el-tree 点击事件 点击对应项目后，currentModel为当前点击项目软件信息,currentModelProjects为当前点击该项目软件下所属的某个模型
@@ -274,7 +354,7 @@ const handleNodeClick = (data) => {
   console.log("左侧 el-tree currentModel", currentModel);
   console.log("左侧 el-tree currentModelProjects", currentModelProjects);
   // 点击了左侧项目软件根节点
-  isClickModel.value = true;
+  // isClickModel.value = true;
   // 判断该用户是否有上传权限
   isHoldAuthority2Upload();
 };
@@ -428,7 +508,7 @@ const handlerChange = (e) => {
 // 上传文件代码部分
 
 // 判断用户是否点击了左侧项目软件根节点
-const isClickModel = ref(false);
+// const isClickModel = ref(false);
 
 // 获取MA用户对项目各软件的操作权限
 const projectModelAuthorityList = ref(null);
@@ -463,6 +543,7 @@ const uploadData = reactive({
   modelType: "",
   createNewModel: "",
   file: [],
+  desc: "",
 });
 
 // 点击上传按钮后打开上传提示框

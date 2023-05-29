@@ -12,7 +12,7 @@ const service = axios.create({
 // console.log("service:",service);
 // 在请求前做事情
 service.interceptors.request.use((req) => {
-    // console.log('发送请求',req);
+    console.log('发送请求',req);
     req.headers['token'] = 'vue-test'
     return req
 })

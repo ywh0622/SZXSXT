@@ -108,9 +108,16 @@ const menuPath = reactive([
   {
     path: "/user",
     name: "user",
-    label: "权限管理",
+    label: "项目管理",
     icon: "Unlock",
     url: "user/User",
+  },
+  {
+    path: "/history",
+    name: "version",
+    label: "历史版本",
+    icon: "documentCopy",
+    url: "history/VersionControl",
   },
 ]);
 

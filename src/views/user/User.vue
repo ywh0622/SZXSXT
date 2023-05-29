@@ -94,6 +94,18 @@
           v-else-if="currentFunction == 'inviteUser' && currentUserLevel == '2'"
         >
           <!-- 邀请用户功能展示区域 -->
+          <!-- 最顶部 搜索区域 -->
+          <div class="user-header">
+            <!-- 搜索 -->
+            <el-form :inline="true" :model="formInline">
+              <el-form-item label="请输入">
+                <el-input v-model="formInline.keyword" placeholder="用户名" />
+              </el-form-item>
+              <el-form-item>
+                <el-button type="primary" @click="handleSearch">搜索</el-button>
+              </el-form-item>
+            </el-form>
+          </div>
           <div class="table">
             <el-table :data="inviteUserList" style="width: 100%" height="500px">
               <!-- 遍历给定的tableLabel来得到表格信息框名称 -->
@@ -171,13 +183,53 @@
               small
               background
               layout="prev, pager, next"
-              :total="inviteConfig.total"
-              :page-size="inviteConfig.limit"
+              :total="projectInvitedConfig.total"
+              :page-size="projectInvitedConfig.limit"
               @current-change="changeInvitePage"
               class="pager mt-4"
             />
           </div>
         </div>
+        <!-- 资源转移 -->
+        <div
+          v-else-if="
+            currentFunction == 'exchangeResource' && currentUserLevel == '1'
+          "
+        >
+          <div class="exchangeResource">
+            <div class="m-4">
+              <p style="padding-bottom: 10px">模型资源</p>
+              <el-select
+                v-model="selectedResource"
+                placeholder="请选择模型资源"
+              >
+                <el-option
+                  v-for="item in resourceList"
+                  :key="item.resourceName"
+                  :label="item.resourceName"
+                  :value="item.resourceName"
+                />
+              </el-select>
+            </div>
+            <div class="m-4">
+              <p style="padding-bottom: 10px">目标用户</p>
+              <el-select v-model="selectedUserId" placeholder="请选择目标用户">
+                <el-option
+                  v-for="item in exchangeUserList"
+                  :key="item.userId"
+                  :label="item.username"
+                  :value="item.userId"
+                />
+              </el-select>
+            </div>
+            <div class="m-4" style="padding-top: 25px">
+              <el-button type="primary" @click="submitResourceExchange"
+                >确认转移</el-button
+              >
+            </div>
+          </div>
+        </div>
+
         <div class="user-main" v-else>您暂无权限查看此页面</div>
       </el-main>
     </el-container>
@@ -210,23 +262,71 @@ const userAndProject = reactive({
 });
 
 // 权限管理页面 左侧树形结构名称
-const data = [
-  {
-    tagName: "用户权限",
-    tagNickName: "userAuthority",
-    icon: "lock",
-  },
-  {
-    tagName: "邀请用户",
-    tagNickName: "inviteUser",
-    icon: "user",
-  },
-  {
-    tagName: "加入项目",
-    tagNickName: "joinProject",
-    icon: "folder",
-  },
-];
+// 根据不同的用户等级 显示不同的内容
+let data = [];
+// 第一个功能的名称
+let currentFunction = ref("");
+if (currentUserLevel == "2") {
+  // 项目管理员 PA
+  data = [
+    {
+      tagName: "用户权限配置",
+      tagNickName: "userAuthority",
+      icon: "lock",
+    },
+    {
+      tagName: "邀请用户加入",
+      tagNickName: "inviteUser",
+      icon: "user",
+    },
+    {
+      tagName: "项目加入确认",
+      tagNickName: "joinProject",
+      icon: "folder",
+    },
+  ];
+  currentFunction.value = "userAuthority";
+} else if (currentUserLevel == "1") {
+  //项目参与者 MA
+  data = [
+    {
+      tagName: "项目加入确认",
+      tagNickName: "joinProject",
+      icon: "folder",
+    },
+    {
+      tagName: "模型资源转移",
+      tagNickName: "exchangeResource",
+      icon: "switch",
+    },
+  ];
+  currentFunction.value = "joinProject";
+} else if (currentUserLevel == "3") {
+  // 管理员用户 SA
+  data = [
+    {
+      tagName: "用户权限配置",
+      tagNickName: "userAuthority",
+      icon: "lock",
+    },
+    {
+      tagName: "项目加入确认",
+      tagNickName: "joinProject",
+      icon: "folder",
+    },
+  ];
+  currentFunction.value = "userAuthority";
+} else {
+  // 游客
+  data = [
+    {
+      tagName: "项目加入确认",
+      tagNickName: "joinProject",
+      icon: "folder",
+    },
+  ];
+  currentFunction.value = "joinProject";
+}
 
 // 权限管理页面 左侧 el-tree配置
 const defaultProps = {
@@ -236,7 +336,6 @@ const defaultProps = {
 };
 
 // 保存当前用户点击的功能信息
-let currentFunction = ref("userAuthority");
 const handleNodeClick = (data) => {
   currentFunction.value = data.tagNickName;
 };
@@ -251,74 +350,105 @@ const drawer = ref(false);
 // 用户数据
 const list = ref([]);
 // 表格头部内容
-const tableLabel = reactive([
-  {
-    prop: "username",
-    label: "用户名",
-    width: 180,
-  },
-  {
-    prop: "department",
-    label: "部门",
-    width: 180,
-  },
-  {
-    prop: "phoneNum",
-    label: "手机号",
-    width: 180,
-  },
-  {
-    prop: "ownAuthority",
-    label: "已拥有权限",
-    width: 250,
-  },
-]);
+let tableLabel = [];
+if (currentUserLevel == "2") {
+  // PA用户
+  tableLabel = [
+    {
+      prop: "username",
+      label: "用户名",
+      width: 180,
+    },
+    {
+      prop: "department",
+      label: "部门",
+      width: 180,
+    },
+    {
+      prop: "phoneNum",
+      label: "手机号",
+      width: 180,
+    },
+    {
+      prop: "ownAuthority",
+      label: "已拥有权限",
+      width: 250,
+    },
+  ];
+} else {
+  // SA用户
+  tableLabel = [
+    {
+      prop: "username",
+      label: "用户名",
+      width: 180,
+    },
+    {
+      prop: "department",
+      label: "部门",
+      width: 180,
+    },
+    {
+      prop: "phoneNum",
+      label: "手机号",
+      width: 180,
+    },
+  ];
+}
 
 // 分页配置
 const config = reactive({
   total: 0,
   page: 1,
-  limit: 11,
+  limit: 10,
   name: "",
 });
 
 // 获取用户信息
 async function getUserData(config) {
+  let form_data = new FormData();
+  form_data.append("limit", config.limit);
+  form_data.append("page", config.page);
   // 登陆用户为管理员
   if (currentUserLevel == "3") {
-    const { code, data, message } = await proxy.$api.getUserDetails();
+    const { code, data, message } = await proxy.$api.getUserDetails(form_data);
     console.log("code, data, message:", code, data, message);
-    // 获取信息总行数，页面中页码需要提前获取到总数量
-    config.total = data.count;
-    list.value = data.map((item) => {
-      // 手动生成item["ownAuthority"]即前端页面显示item.username该用户已拥有的权限
-      item["ownAuthority"] = "";
-      return item;
-    });
+    if (code == 200) {
+      // 获取信息总行数，页面中页码需要提前获取到总数量
+      config.total = data.count;
+      list.value = data.userList.map((item) => {
+        return item;
+      });
+    } else {
+      ElMessage.error(message);
+    }
   } else {
     // 登陆用户非管理员
-    const { code, data, message } = await proxy.$api.getUserLevel(
-      userAndProject
-    );
+    form_data.append("projectId", userAndProject.project.selectedProjectId);
+    const { code, data, message } = await proxy.$api.getUserLevel(form_data);
     console.log("code, data, message:", code, data, message);
-    // 获取信息总行数，页面中页码需要提前获取到总数量
-    config.total = data.count;
-    list.value = data.userList.map((item) => {
-      // 手动生成item["ownAuthority"]即前端页面显示item.username该用户已拥有的权限
-      item["ownAuthority"] = "";
-      item["authority"].forEach((element) => {
-        if (element["hasAuthority"]) {
-          item["ownAuthority"] += element["modelType"] + ", ";
+    if (code == 200) {
+      // 获取信息总行数，页面中页码需要提前获取到总数量
+      config.total = data.count;
+      list.value = data.userList.map((item) => {
+        // 手动生成item["ownAuthority"]即前端页面显示item.username该用户已拥有的权限
+        item["ownAuthority"] = "";
+        item["authority"].forEach((element) => {
+          if (element["hasAuthority"]) {
+            item["ownAuthority"] += element["modelType"] + ", ";
+          }
+        });
+        if (item["ownAuthority"].length > 0) {
+          item["ownAuthority"] = item["ownAuthority"].substr(
+            0,
+            item["ownAuthority"].length - 2
+          );
         }
+        return item;
       });
-      if (item["ownAuthority"].length > 0) {
-        item["ownAuthority"] = item["ownAuthority"].substr(
-          0,
-          item["ownAuthority"].length - 2
-        );
-      }
-      return item;
-    });
+    } else {
+      ElMessage.error(message);
+    }
   }
 }
 
@@ -417,7 +547,7 @@ const handleDelete = (row) => {
       // currentUserLevel=3表示为删除用户
       if (currentUserLevel == "3") {
         const form_data = new FormData();
-        form_data.append("user_id", row.id);
+        form_data.append("user_id", row.userId);
         const { code, data, message } = await proxy.$api.deleteUser(form_data);
         if (code === 200) {
           ElMessage({
@@ -431,7 +561,7 @@ const handleDelete = (row) => {
         }
       } else {
         const form_data = new FormData();
-        form_data.append("user_id", row.id);
+        form_data.append("user_id", row.userId);
         form_data.append(
           "project_id",
           userAndProject.project.selectedProjectId
@@ -462,6 +592,11 @@ const handleDelete = (row) => {
 // 受邀请用户列表
 const inviteUserList = ref([]);
 
+// 搜索的用户名称
+const formInline = reactive({
+  keyword: "",
+});
+
 // 表格头部内容
 const inviteTableLabel = reactive([
   {
@@ -486,19 +621,43 @@ const inviteConfig = reactive({
   total: 0,
   page: 1,
   limit: 11,
-  name: "",
 });
 
 // 获取可邀请用户信息
 async function getInviteUserList(inviteConfig) {
-  const { code, data, message } = await proxy.$api.getInviteUserList();
+  let form_data = new FormData();
+  form_data.append("limit", inviteConfig.limit);
+  form_data.append("page", inviteConfig.page);
+  const { code, data, message } = await proxy.$api.getInviteUserList(form_data);
   console.log("code, data, message:", code, data, message);
-  // 获取信息总行数，页面中页码需要提前获取到总数量
-  inviteConfig.total = data.count;
-  inviteUserList.value = data.userList.map((item) => {
-    return item;
-  });
+  if (code == 200) {
+    // 获取信息总行数，页面中页码需要提前获取到总数量
+    inviteConfig.total = data.count;
+    inviteUserList.value = data.userList.map((item) => {
+      return item;
+    });
+  } else {
+    ElMessage.error(message);
+  }
 }
+
+// 获取指定用户信息
+const handleSearch = async () => {
+  if (formInline.keyword == "") {
+    ElMessage.error("请输入要搜索的用户名称!");
+  } else {
+    const { code, data, message } = await proxy.$api.getSpecifyUser();
+    console.log("code, data, message:", code, data, message);
+    if (code == 200) {
+      // 获取信息总行数，页面中页码需要提前获取到总数量
+      inviteUserList.value = data.map((item) => {
+        return item;
+      });
+    } else {
+      ElMessage.error(message);
+    }
+  }
+};
 
 // 改变页码
 const changeInvitePage = (page) => {
@@ -561,24 +720,32 @@ const projectInvitedConfig = reactive({
   total: 0,
   page: 1,
   limit: 11,
-  name: "",
 });
 
 // 获取可邀请用户信息
-async function getProjectInvitedList(projectInvitedConfig) {
-  const { code, data, message } = await proxy.$api.getInviteProjectList();
+async function getInviteProjectList(projectInvitedConfig) {
+  let form_data = new FormData();
+  form_data.append("limit", projectInvitedConfig.limit);
+  form_data.append("page", projectInvitedConfig.page);
+  const { code, data, message } = await proxy.$api.getInviteProjectList(
+    form_data
+  );
   console.log("code, data, message:", code, data, message);
-  // 获取信息总行数，页面中页码需要提前获取到总数量
-  projectInvitedConfig.total = data.count;
-  projectInvitedList.value = data.projectList.map((item) => {
-    return item;
-  });
+  if (code == 200) {
+    // 获取信息总行数，页面中页码需要提前获取到总数量
+    projectInvitedConfig.total = data.count;
+    projectInvitedList.value = data.projectList.map((item) => {
+      return item;
+    });
+  } else {
+    ElMessage.error(message);
+  }
 }
 
 // 改变页码
 const changeProjectInvitedPage = (page) => {
   projectInvitedConfig.page = page;
-  getProjectInvitedList(projectInvitedConfig);
+  getInviteProjectList(projectInvitedConfig);
 };
 
 // 加入项目组
@@ -622,6 +789,69 @@ const refuseJointProject = (row) => {
 // --------------------------------------------------------
 // --------------------------------------------------------
 
+// 项目资源转移模块
+// --------------------------------------------------------
+// --------------------------------------------------------
+
+// 用户所拥有的模型资源列表
+let resourceList = [];
+// 用户所选择要转移的资源名称
+const selectedResource = ref("");
+
+// 获取所拥有的项目资源模型列表
+async function getResourcesList() {
+  const { code, data, message } = await proxy.$api.getResourcesList();
+  console.log("code, data, message:", code, data, message);
+  if (code === 200) {
+    resourceList = data;
+  } else {
+    ElMessage.error(message);
+  }
+}
+
+// 可转移的目标用户列表
+let exchangeUserList = [];
+// 用户所选择的转移对象
+const selectedUserId = ref("");
+
+// 获取用户可转移的目标用户列表
+async function getOtherUserList() {
+  const { code, data, message } = await proxy.$api.getOtherUserList();
+  console.log("code, data, message:", code, data, message);
+  if (code === 200) {
+    exchangeUserList = data;
+  } else {
+    ElMessage.error(message);
+  }
+}
+
+// 转移模型资源
+const submitResourceExchange = async () => {
+  if (selectedResource.value == "") {
+    ElMessage.error("请选择模型资源");
+  } else if (selectedUserId.value == "") {
+    ElMessage.error("请选择目标用户");
+  } else {
+    ElMessageBox.confirm("确定转移吗?")
+      .then(async () => {
+        const { code, data, message } = await proxy.$api.exchangeResource();
+        if (code == 200) {
+          ElMessage({
+            showClose: true,
+            message: "资源转移成功",
+            type: "success",
+          });
+          reload();
+        } else {
+          ElMessage.error(message);
+        }
+      })
+      .catch(() => {});
+  }
+};
+// --------------------------------------------------------
+// --------------------------------------------------------
+
 onMounted(() => {
   // 只有用户权限为2或者3时，才向后端请求数据，即用户为PA或者MA用户
   if (currentUserLevel == "2" || currentUserLevel == "3") {
@@ -630,18 +860,20 @@ onMounted(() => {
   }
   // 只有用户权限为2时，才向后端发送请求，获取可邀请用户列表
   if (currentUserLevel == "2") {
-    console.log("当前用户权限为: ", currentUserLevel);
+    // console.log("当前用户权限为: ", currentUserLevel);
     getInviteUserList(inviteConfig);
   }
   // 获取接收到的项目邀请列表
-  getProjectInvitedList(projectInvitedConfig);
+  getInviteProjectList(projectInvitedConfig);
+  // 只有用户为MA用户时，才存在资源转移功能
+  if (currentUserLevel == "1") {
+    getResourcesList();
+    getOtherUserList();
+  }
 });
 </script>
 
 <style lang="less" scoped>
-.user-main {
-  padding: 20px;
-}
 .table {
   position: relative;
   width: 100%;
@@ -667,5 +899,16 @@ onMounted(() => {
 }
 .user-main {
   padding: 20px;
+}
+.exchangeResource {
+  display: flex;
+}
+.m-4 {
+  padding-left: 20px;
+}
+.user-header {
+  display: flex;
+  width: 100%;
+  justify-content: right;
 }
 </style>>

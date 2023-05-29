@@ -37,11 +37,11 @@ export default {
     // PA账号对该项目下所有MA账号权限详情 完成
     getUserLevel(params){
         return request({
-            url: '/users/'+params.project.selectedProjectId+'/members',
+            url: '/users/'+params.get('projectId')+'/members',
             method: 'get',
             // 真实上线或者请求服务器接口需要改成false
             mock:false,
-            data:null
+            data:params
         })
     },
     // PA账号对该项目下MA账号的权限修改 完成
@@ -71,7 +71,7 @@ export default {
             method: 'get',
             // 真实上线或者请求服务器接口需要改成false
             mock:false,
-            data:null
+            data:params
         })
     },
     // SA账号删除账号  完成
@@ -129,6 +129,16 @@ export default {
     getInviteUserList(params){
         return request({
             url: '/invited/users',
+            method: 'get',
+            // 真实上线或者请求服务器接口需要改成false
+            mock:true,
+            data:params
+        })
+    },
+    // 获取搜索指定的用户 未完成
+    getSpecifyUser(params){
+        return request({
+            url: '/invite/specify',
             method: 'get',
             // 真实上线或者请求服务器接口需要改成false
             mock:true,
@@ -195,8 +205,78 @@ export default {
             data:params
         })
     },
+    // 	MA用户所拥有的资源列表 未完成
+    getResourcesList(params){
+        return request({
+            url: '/resources/list',
+            method: 'get',
+            // 真实上线或者请求服务器接口需要改成false
+            mock:true,
+            data:params
+        })
+    },
+    // 	MA用户转移模型资源时组内其余用户列表 未完成
+    getOtherUserList(params){
+        return request({
+            url: '/resource/user',
+            method: 'get',
+            // 真实上线或者请求服务器接口需要改成false
+            mock:true,
+            data:params
+        })
+    },
+    // 	MA用户转移资源模型 未完成
+    exchangeResource(params){
+        return request({
+            url: '/resource/exchange',
+            method: 'post',
+            // 真实上线或者请求服务器接口需要改成false
+            mock:true,
+            data:params
+        })
+    },
+    // 	获取项目历史版本信息 未完成
+    getProjectHistoryVersionData(params){
+        return request({
+            url: '/history/project',
+            method: 'get',
+            // 真实上线或者请求服务器接口需要改成false
+            mock:true,
+            data:params
+        })
+    },
+    // 	获取某个模型项目历史版本列表 未完成
+    getSpecifyHistoryVersionData(params){
+        return request({
+            url: '/history/project/model',
+            method: 'get',
+            // 真实上线或者请求服务器接口需要改成false
+            mock:true,
+            data:params
+        })
+    },
+    // 	查看某个历史版本信息 未完成
+    getSpecifyHistoryVersionDetailData(params){
+        return request({
+            url: '/history/project/model/specify',
+            method: 'get',
+            // 真实上线或者请求服务器接口需要改成false
+            mock:true,
+            data:params
+        })
+    },
+    // 	使用历史版本覆盖新版本 未完成
+    cover(params){
+        return request({
+            url: '/history/project/model/cover',
+            method: 'post',
+            // 真实上线或者请求服务器接口需要改成false
+            mock:true,
+            data:params
+        })
+    },
 
-
+    
     // 与后端进行连接测试 测试 可删除
     testPut(params){
         return request({
