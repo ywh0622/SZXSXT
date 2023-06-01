@@ -43,7 +43,7 @@
                   查看
                 </el-button>
                 <el-button size="small" type="danger" @click="cover(scope.row)">
-                  覆盖
+                  恢复
                 </el-button>
               </template>
             </el-table-column>
@@ -62,8 +62,9 @@
       </el-main>
     </el-container>
   </div>
-  <el-dialog
-    v-model="dialogVisible"
+  <!-- 历史版本详情查看 -->
+  <el-drawer
+    v-model="drawer"
     title="历史版本"
     width="30%"
     :before-close="handleClose"
@@ -88,7 +89,7 @@
         </template>
       </el-tree>
     </div>
-  </el-dialog>
+  </el-drawer>
 </template>
 
 <script setup>
@@ -182,6 +183,11 @@ const versionTableLabel = reactive([
     label: "版本名称",
     width: 180,
   },
+  {
+    prop: "versionNum",
+    label: "版本号",
+    width: 180,
+  },
 ]);
 
 // 分页配置
@@ -232,7 +238,7 @@ const getversionDetail = async (row) => {
   if (code === 200) {
     specifyVersionDetail.value = data;
     // 显示弹出框
-    dialogVisible.value = true;
+    drawer.value = true;
   } else {
     ElMessage.error(message);
   }
@@ -258,7 +264,7 @@ const cover = async (row) => {
 // 点击查看后的弹出框
 // ------------------------------------------------------
 // 详细内容弹出框
-const dialogVisible = ref(false);
+const drawer = ref(false);
 
 // 弹出框 el-tree配置
 const versionDetailProps = {

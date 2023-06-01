@@ -54,11 +54,77 @@ const router = useRouter();
 // 获取当前用户项目列表
 store.commit("getCurrentUserProjectList");
 const projectList = store.state.currentUserProjectList;
+
+// 菜单栏地址
+// 非游客用户菜单地址
+const menuPath = reactive([
+  {
+    path: "/home",
+    name: "home",
+    label: "首页",
+    icon: "location",
+    url: "home/Home",
+  },
+  {
+    path: "/repo",
+    name: "repository",
+    label: "模型仓库",
+    icon: "house",
+    url: "repo/Repository",
+  },
+  {
+    path: "/relation",
+    name: "relation",
+    label: "模型关系",
+    icon: "house",
+    url: "relation/Relation",
+  },
+  {
+    path: "/user",
+    name: "user",
+    label: "项目管理",
+    icon: "Unlock",
+    url: "user/User",
+  },
+  {
+    path: "/history",
+    name: "version",
+    label: "历史版本",
+    icon: "documentCopy",
+    url: "history/VersionControl",
+  },
+]);
+// 游客用户菜单无项目管理和历史版本
+const touristMenuPath = reactive([
+  {
+    path: "/home",
+    name: "home",
+    label: "首页",
+    icon: "location",
+    url: "home/Home",
+  },
+  {
+    path: "/repo",
+    name: "repository",
+    label: "模型仓库",
+    icon: "house",
+    url: "repo/Repository",
+  },
+  {
+    path: "/relation",
+    name: "relation",
+    label: "模型关系",
+    icon: "house",
+    url: "relation/Relation",
+  },
+]);
+
 // 表单中的数据
 const formData = reactive({
   selectedProjectName: "",
   selectedProjectId: "",
 });
+
 const Continue = () => {
   proxy.$refs.selectedProjectRef.validate(async (valid) => {
     if (valid) {
@@ -67,6 +133,14 @@ const Continue = () => {
         if (element.projectName == formData.selectedProjectName) {
           store.commit("setCurrentUserLevel", element.userLevel);
           formData.selectedProjectId = element.projectId;
+          // 将用户的菜单保存到store中的menu变量和浏览器中
+          // 游客用户
+          if (element.userLevel == 0) {
+            store.commit("setMenu", touristMenuPath);
+          } else {
+            store.commit("setMenu", menuPath);
+          }
+          store.commit("addMenu", router);
         }
       });
       // 在store中设置当前用户所选择的项目和项目ID

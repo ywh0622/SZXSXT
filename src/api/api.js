@@ -34,10 +34,10 @@ export default {
             data:params,
         })
     },
-    // PA账号对该项目下所有MA账号权限详情 完成
+    // PA账号查看项目下所有MA账号权限详情 完成
     getUserLevel(params){
         return request({
-            url: '/users/'+params.get('projectId')+'/members',
+            url: '/users/'+params.get('project_id')+'/members',
             method: 'get',
             // 真实上线或者请求服务器接口需要改成false
             mock:false,
@@ -84,7 +84,7 @@ export default {
             data:params
         })
     },
-    // 获取该用户的项目信息 完成
+    // 获取登陆用户的项目信息 完成
     getProjectDetails(params){
         return request({
             url: '/projects/' + params + '/models',
@@ -98,7 +98,7 @@ export default {
     // 获取项目可修改的属性名 完成
     getModifiableElement(params){
         return request({
-            url: '/models/elements',
+            url: '/models/modifiable_elements',
             method: 'get',
             // 真实上线或者请求服务器接口需要改成false
             mock:false,
@@ -145,10 +145,10 @@ export default {
             data:params
         })
     },
-    // 邀请用户加入项目 未完成
+    // 邀请用户加入项目 完成但未整合-----------
     inviteUser(params){
         return request({
-            url: '/invited/user',
+            url:'/invited/user',     // '/users/pa/invitation',
             method: 'post',
             // 真实上线或者请求服务器接口需要改成false
             mock:true,
@@ -165,27 +165,27 @@ export default {
             data:params
         })
     },
-    // 加入项目组 未完成
+    // 接受邀请加入项目 完成但未整合---------------------
     jointProject(params){
         return request({
-            url: '/invited/project',
-            method: 'post',
+            url: '/invited/project',     // '/users/invitation',
+            method: 'put',
             // 真实上线或者请求服务器接口需要改成false
             mock:true,
             data:params
         })
     },
-    // 拒绝加入项目组 未完成
+    // 拒绝邀请加入项目 完成但未整合---------------------
     refuseJointProject(params){
         return request({
-            url: '/invited/projetct/refuse',
-            method: 'post',
+            url: '/invited/projetct/refuse',     //'/users/invitation',
+            method: 'delete',
             // 真实上线或者请求服务器接口需要改成false
             mock:true,
             data:params
         })
     },
-    // 查看当前登陆用户对项目各软件的操作权限 未完成
+    // MA用户查看当前项目各模型软件的操作权限，是否拥有文件上传的资格 未完成
     getProjectModelAuthority(params){
         return request({
             url: '/project/model',

@@ -33,6 +33,7 @@
         <template #dropdown>
           <el-dropdown-menu>
             <el-dropdown-item @click="drawer = true">修改密码</el-dropdown-item>
+            <el-dropdown-item @click="changeProject">切换项目</el-dropdown-item>
             <el-dropdown-item @click="handleLoginOut">退出</el-dropdown-item>
           </el-dropdown-menu>
         </template>
@@ -136,9 +137,25 @@ const router = useRouter();
 store.commit("getCurrentUser");
 const username = store.state.currentUser;
 
+// 获取当前项目名称
+store.commit("getCurrentUserSelectedProject");
+const currentProjectName = store.state.selectedProject.selectedProjectName;
+
 // 用户头像地址
 const imgSrc = require("../assets/user.jpg");
 
+// 菜单栏缩进
+function handleCollapse() {
+  store.commit("updateCollapse", "123");
+}
+
+// 获取当前选择的菜单
+const current = computed(() => {
+  return store.state.currentMenu;
+});
+
+// 密码修改部分
+// -------------------------------------------------------
 // 密码校验 判断两次输入的密码是否一致
 const equalToPassword = (rule, value, callback) => {
   if (passwordDetail.newPassword !== value) {
@@ -148,24 +165,10 @@ const equalToPassword = (rule, value, callback) => {
   }
 };
 
-// 菜单栏缩进
-function handleCollapse() {
-  // 随意赋值 此时store中isCollapse为true,触发aside对应判断
-  store.commit("updateCollapse", "123");
-}
-
-// 获取当前选择的菜单
-const current = computed(() => {
-  return store.state.currentMenu;
-});
-
-// 获取当前项目名称
-store.commit("getCurrentUserSelectedProject");
-const currentProjectName = store.state.selectedProject.selectedProjectName;
-
 // 是否显示修改命令抽屉
 const drawer = ref(false);
 
+// 新密码
 const passwordDetail = reactive({
   orignPassword: "",
   newPassword: "",
@@ -221,6 +224,14 @@ const onSubmit = () => {
         type: "error",
       });
     }
+  });
+};
+// -------------------------------------------------------
+
+// 切换版本部分
+const changeProject = () => {
+  router.push({
+    name: "projectSelect",
   });
 };
 

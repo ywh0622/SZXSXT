@@ -92,7 +92,7 @@
             },
           ]"
         >
-          <el-radio-group v-model="registerForm.role">
+          <el-radio-group v-model="registerForm.role" @change="roleChange">
             <el-radio :label="2">项目管理员</el-radio>
             <el-radio :label="1">模型管理员</el-radio>
             <el-radio :label="0">游客</el-radio>
@@ -113,7 +113,7 @@
         >
           <el-input
             v-model="registerForm.projectId"
-            placeholder="项目管理员无需填写"
+            placeholder="请输入项目代码"
             :disabled="registerForm.role == 2 ? true : false"
           />
         </el-form-item>
@@ -159,8 +159,12 @@
         </el-form-item>
       </el-form>
       <div style="text-align: center">
-        <el-button type="primary" @click="onRegister">注册</el-button>
-        <el-button type="primary" @click="resetForm">重置信息</el-button>
+        <el-button type="primary" @click="onRegister" :auto-insert-space="true"
+          >注册</el-button
+        >
+        <el-button type="primary" @click="resetForm" :auto-insert-space="true"
+          >重置</el-button
+        >
       </div>
     </div>
   </div>
@@ -221,15 +225,21 @@ const checkPhoneNumber = (rule, value, callback) => {
   callback(new Error("请输入合法的手机号"));
 };
 
+// 用户角色变化时触发
+const roleChange = (rows) => {
+  // 用户角色为2时，代表为项目管理员，不需要填写项目代码
+  if (rows == 2) {
+    registerForm.projectId = "项目管理员无需填写";
+  } else {
+    registerForm.projectId = "";
+  }
+};
+
 // 用户注册
 const onRegister = () => {
   proxy.$refs.registerFormRef.validate(async (valid) => {
     if (valid) {
       // 向后端发送注册信息
-      // 项目管理员无需填写项目Id，所以需要将前端收集的项目代码进行过滤
-      if (registerForm.role == 2) {
-        registerForm.projectId = null;
-      }
       const data = await proxy.$api.register(registerForm);
       // 如果code ==200, 表示注册成功
       if (data.code === 200) {

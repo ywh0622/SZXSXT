@@ -28,15 +28,6 @@ const userAndProject = reactive({
 let msg1 = ref(null);
 let msg2 = ref(null);
 let msg3 = ref(null);
-// axios.get("/api/repo/modifiableElement").then(
-//   (res) => {
-//     console.log("请求成功:", res);
-//     msg1.value = res.data;
-//   },
-//   (error) => {
-//     console.log("请求失败:", error.messgae);
-//   }
-// );
 
 const getRepoList = async () => {
   let tempList = await proxy.$api.getRepoList(userAndProject);

@@ -2,7 +2,7 @@
   <div class="box">
     <el-container>
       <!-- 模型仓库页面左侧 -->
-      <el-aside width="250px">
+      <el-aside width="16%" class="side">
         <el-tree
           :data="projectList"
           :props="projectProps"
@@ -13,7 +13,6 @@
           <template #default="{ data }">
             <component class="icons" :is="data.icon"></component>
             <el-tooltip
-              class="box-item"
               effect="dark"
               :content="data.showName"
               :show-after="1000"
@@ -22,7 +21,7 @@
               <span style="margin-left: 10px">{{ data.showName }}</span>
             </el-tooltip>
 
-            <el-button
+            <!-- <el-button
               style="margin-left: 15px"
               size="small"
               @click="uploadDialog"
@@ -31,7 +30,7 @@
                 (currentUserLevel == '2' || hasAuthority == true)
               "
               >上传</el-button
-            >
+            > -->
           </template>
         </el-tree>
       </el-aside>
@@ -46,44 +45,78 @@
           </div>
         </div>
         <div v-else>
-          <el-tabs type="border-card" class="demo-tabs">
-            <!-- Tree View部分 -->
-            <el-tab-pane>
-              <!-- 标题部分 -->
-              <template #label>
-                <span class="custom-tabs-label">
-                  <el-icon><Link /></el-icon>
-                  <span>Tree View</span>
-                </span>
-              </template>
-              <!-- 文件树 -->
-              <el-tree
-                :data="currentModelProjects.childProjects"
-                :props="childProjectProps"
-                @node-click="childhandleNodeClick"
-                highlight-current
-              >
-                <template #default="{ data }">
-                  <component class="icons" :is="data.icon"></component>
-                  <span style="margin-left: 10px">{{ data.showName }}</span>
-                  <el-button
-                    style="margin-left: 600px"
-                    type="primary"
-                    size="small"
-                    @click="showDetails"
-                    v-if="showButtonFlag && data.id == childCurrentProject.id"
-                    >查看</el-button
+          <el-container>
+            <el-aside width="97%">
+              <el-tabs type="border-card">
+                <!-- Tree View部分 -->
+                <el-tab-pane>
+                  <!-- 标题部分 -->
+                  <template #label>
+                    <span class="custom-tabs-label">
+                      <el-icon><Link /></el-icon>
+                      <span>Tree View</span>
+                    </span>
+                  </template>
+                  <!-- 文件树 -->
+                  <el-tree
+                    :data="currentModelProjects.childProjects"
+                    :props="childProjectProps"
+                    @node-click="childhandleNodeClick"
+                    highlight-current
                   >
-                </template>
-              </el-tree>
-            </el-tab-pane>
-          </el-tabs>
+                    <template #default="{ data }">
+                      <component class="icons" :is="data.icon"></component>
+                      <span style="margin-left: 10px">{{ data.showName }}</span>
+                      <!-- <el-button
+                        style="margin-left: 600px"
+                        type="primary"
+                        size="small"
+                        @click="showDetails"
+                        v-if="
+                          showButtonFlag && data.id == childCurrentProject.id
+                        "
+                        >查看</el-button
+                      > -->
+                    </template>
+                  </el-tree>
+                </el-tab-pane>
+              </el-tabs>
+            </el-aside>
+            <el-main width="3%">
+              <div class="buttonDisplay">
+                <div class="row">
+                  <el-tooltip effect="dark" content="查看详情" placement="left">
+                    <div class="singleButton">
+                      <el-button
+                        :icon="Search"
+                        :disabled="!showButtonFlag"
+                        circle
+                        @click="showDetails"
+                      />
+                    </div>
+                  </el-tooltip>
+                  <el-tooltip effect="dark" content="上传文件" placement="left">
+                    <div class="singleButton">
+                      <el-button
+                        @click="uploadDialog"
+                        :icon="Upload"
+                        circle
+                        :disabled="
+                          !(currentUserLevel == '2' || hasAuthority == true)
+                        "
+                      />
+                    </div>
+                  </el-tooltip>
+                </div>
+              </div>
+            </el-main>
+          </el-container>
         </div>
       </el-main>
     </el-container>
 
     <!-- 点击查看后的弹出框 -->
-    <el-dialog
+    <el-drawer
       v-model="dialogVisible"
       :title="childCurrentProject.showName"
       width="30%"
@@ -115,6 +148,7 @@
             type="primary"
             @click="testConnection"
             v-if="modifiableElementNum > 0"
+            :auto-insert-space="true"
           >
             修改
           </el-button>
@@ -123,6 +157,7 @@
             type="primary"
             @click="handleClose"
             v-if="!modifyButtonFlag"
+            :auto-insert-space="true"
           >
             关闭
           </el-button>
@@ -131,6 +166,7 @@
             @click="changeInfo"
             v-if="modifyButtonFlag"
             :disabled="returnMsg != '连接成功'"
+            :auto-insert-space="true"
           >
             保存
           </el-button>
@@ -144,25 +180,25 @@
           </el-alert>
         </span>
       </template>
-    </el-dialog>
-
+    </el-drawer>
     <!-- 上传文件框 -->
-    <el-dialog
+    <el-drawer
       v-model="uploadDialogVisible"
       title="上传文件"
       width="30%"
       :before-close="uploadHandleClose"
     >
-      <el-tabs type="border-card">
-        <el-tab-pane label="创建新模型">
+      <!-- 创建新模型 -->
+      <el-tabs type="border-card" v-model="activeTabName">
+        <el-tab-pane label="创建新模型" name="createNewModel">
           <el-form
-            :model="uploadData"
+            :model="newModelData"
             label-width="90px"
             require-asterisk-position="left"
-            ref="uploadDataFormRef"
+            ref="newModelDataFormRef"
           >
             <el-form-item label="软件类型" prop="modelType">
-              <el-input v-model="uploadData.modelType" disabled />
+              <el-input v-model="newModelData.modelType" disabled />
             </el-form-item>
             <el-form-item
               label="上传文件"
@@ -178,7 +214,7 @@
                 action="none"
                 multiple
                 accept=".json"
-                v-model:file-list="uploadData.file"
+                v-model:file-list="newModelData.file"
                 :auto-upload="false"
                 :limit="1"
               >
@@ -202,23 +238,24 @@
                 },
               ]"
             >
-              <el-input v-model="uploadData.desc" type="textarea" />
+              <el-input v-model="newModelData.desc" type="textarea" />
             </el-form-item>
           </el-form>
         </el-tab-pane>
-        <el-tab-pane label="覆盖旧模型">
+        <!-- 覆盖旧模型 -->
+        <el-tab-pane label="覆盖旧模型" name="coverOldModel">
           <el-form
-            :model="uploadData"
+            :model="oldModelData"
             label-width="90px"
             require-asterisk-position="left"
-            ref="uploadDataFormRef"
+            ref="oldModelDataFormRef"
           >
             <el-form-item label="软件类型" prop="modelType">
-              <el-input v-model="uploadData.modelType" disabled />
+              <el-input v-model="oldModelData.modelType" disabled />
             </el-form-item>
             <el-form-item
               label="上传方式"
-              prop="createNewModel"
+              prop="uploadMode"
               :rules="[
                 {
                   required: true,
@@ -227,7 +264,7 @@
               ]"
             >
               <el-select
-                v-model="uploadData.createNewModel"
+                v-model="oldModelData.uploadMode"
                 placeholder="选择上传方式"
               >
                 <el-option label="创建新版本" value="0" />
@@ -248,7 +285,7 @@
                 action="none"
                 multiple
                 accept=".json"
-                v-model:file-list="uploadData.file"
+                v-model:file-list="oldModelData.file"
                 :auto-upload="false"
                 :limit="1"
               >
@@ -272,7 +309,7 @@
                 },
               ]"
             >
-              <el-input v-model="uploadData.desc" type="textarea" />
+              <el-input v-model="oldModelData.desc" type="textarea" />
             </el-form-item>
           </el-form>
         </el-tab-pane>
@@ -280,17 +317,23 @@
 
       <template #footer>
         <span class="dialog-footer">
-          <el-button type="primary" @click="uploadFile"> 确认上传 </el-button>
+          <el-button
+            type="primary"
+            @click="uploadFile"
+            :auto-insert-space="true"
+          >
+            上传
+          </el-button>
         </span>
       </template>
-    </el-dialog>
+    </el-drawer>
   </div>
 </template>
 
 <script setup>
 import { ref, getCurrentInstance, onMounted, nextTick, reactive } from "vue";
 import { ElMessageBox, ElMessage } from "element-plus";
-import { SortUp } from "@element-plus/icons-vue";
+import { SortUp, Search, Upload } from "@element-plus/icons-vue";
 import { useRouter } from "vue-router";
 import { useStore } from "vuex";
 import { inject } from "vue";
@@ -315,6 +358,7 @@ const currentUserLevel = store.state.currentUserLevel;
 
 // 左侧树形图
 // ------------------------------------------
+// ------------------------------------------
 // 左侧 el-tree 获取该项目在所有软件下的模型信息
 let projectList = ref([]);
 const getProjectDetails = async () => {
@@ -322,7 +366,7 @@ const getProjectDetails = async () => {
     userAndProject.project.selectedProjectId
   );
   if (code == 200) {
-    console.log("data:", data);
+    console.log("该项目在所有软件下的模型信息: ", data);
     projectList.value = data;
   } else {
     ElMessage.error(message);
@@ -358,10 +402,12 @@ const handleNodeClick = (data) => {
   // 判断该用户是否有上传权限
   isHoldAuthority2Upload();
 };
-// ------------------------------------------
+// -----------------------------------------------------------------
+// -----------------------------------------------------------------
 
 // 右侧 Tree View 设置
-// ------------------------------------------
+// -----------------------------------------------------------------
+// -----------------------------------------------------------------
 // 右侧 el-tree配置
 const childProjectProps = {
   children: "childProjects",
@@ -392,6 +438,8 @@ const dialogVisible = ref(false);
 // modifiableElementNum表示打开的标签属性中可以修改的属性数量，数量等于1时，打开的显示框中才会显示修改按钮
 let modifiableElementNum = ref(0);
 const showDetails = () => {
+  // 先设置为0，防止上一次打开后未清0
+  modifiableElementNum.value = 0;
   // 是否显示修改按钮
   childCurrentProject.value.elementDetails.forEach((item) => {
     if (!checkModified(item.Name)) {
@@ -424,11 +472,7 @@ const changeInfo = () => {
       if (isRewiriteEditor.value) {
         const { code, data, message } = await proxy.$api.submitModel();
         if (code == 200) {
-          ElMessage({
-            showClose: true,
-            message: "修改成功",
-            type: "success",
-          });
+          ElMessage.success("修改成功");
           dialogVisible.value = false;
           modifiableElementNum.value = 0;
           modifyButtonFlag.value = false;
@@ -439,11 +483,7 @@ const changeInfo = () => {
         }
         reload();
       } else {
-        ElMessage({
-          showClose: true,
-          message: "未修改数据",
-          type: "error",
-        });
+        ElMessage.error("未修改数据");
       }
     })
     .catch(() => {
@@ -539,17 +579,29 @@ const isHoldAuthority2Upload = async () => {
 
 // 上传文件框显示与否判断
 const uploadDialogVisible = ref(false);
-const uploadData = reactive({
+
+// 用户选中的tab页面
+const activeTabName = ref("createNewModel");
+
+// 存放创建新模型的数据
+const newModelData = reactive({
   modelType: "",
-  createNewModel: "",
   file: [],
   desc: "",
 });
-
+// 存放覆盖旧模型的数据
+const oldModelData = reactive({
+  modelType: "",
+  uploadMode: "",
+  file: [],
+  desc: "",
+});
 // 点击上传按钮后打开上传提示框
 const uploadDialog = () => {
   uploadDialogVisible.value = true;
-  uploadData.modelType = currentModel;
+  // 软件类型名称赋值
+  newModelData.modelType = currentModel;
+  oldModelData.modelType = currentModel;
 };
 
 // 点击关闭后触发该事件
@@ -558,7 +610,8 @@ const uploadHandleClose = (done) => {
     .then(() => {
       uploadDialogVisible.value = false;
       // 重置表单
-      proxy.$refs.uploadDataFormRef.resetFields();
+      proxy.$refs.newModelDataFormRef.resetFields();
+      proxy.$refs.oldModelDataFormRef.resetFields();
     })
     .catch(() => {
       // catch error
@@ -567,31 +620,62 @@ const uploadHandleClose = (done) => {
 
 // 上传文件
 const uploadFile = () => {
-  proxy.$refs.uploadDataFormRef.validate(async (valid) => {
-    if (valid) {
-      // 向后端发送信息
-      const form_data = new FormData();
-      form_data.append("modelType", uploadData.modelType);
-      form_data.append("createNewModel", uploadData.createNewModel);
-      uploadData.file.forEach((v) => {
-        console.log("file: ", v);
-        form_data.append("file", v.raw);
-      });
-      // 关闭上传文件退出框
-      uploadDialogVisible.value = false;
-      // 重置表单
-      proxy.$refs.uploadDataFormRef.resetFields();
-      reload();
-    } else {
-      ElMessage({
-        showClose: true,
-        message: "请输入正确的内容",
-        type: "error",
-      });
-    }
-  });
+  ElMessageBox.confirm("是否确认上传文件?")
+    .then(() => {
+      // 用户选择创建新模型
+      if (activeTabName.value == "createNewModel") {
+        proxy.$refs.newModelDataFormRef.validate(async (valid) => {
+          if (valid) {
+            console.log("用户选中的标签：", activeTabName);
+            // 向后端发送信息
+            const form_data = new FormData();
+            form_data.append("modelType", newModelData.modelType);
+            form_data.append("desc", newModelData.desc);
+            newModelData.file.forEach((v) => {
+              console.log("file: ", v);
+              form_data.append("file", v.raw);
+            });
+            // 关闭上传文件退出框
+            uploadDialogVisible.value = false;
+            // 重置表单
+            proxy.$refs.newModelDataFormRef.resetFields();
+            ElMessage.success("上传成功!");
+            reload();
+          } else {
+            ElMessage.error("请输入正确的内容!");
+          }
+        });
+      } else {
+        proxy.$refs.oldModelDataFormRef.validate(async (valid) => {
+          if (valid) {
+            console.log("用户选中的标签：", activeTabName);
+            // 向后端发送信息
+            const form_data = new FormData();
+            form_data.append("modelType", oldModelData.modelType);
+            form_data.append("uploadMode", oldModelData.uploadMode);
+            form_data.append("desc", oldModelData.desc);
+            oldModelData.file.forEach((v) => {
+              console.log("file: ", v);
+              form_data.append("file", v.raw);
+            });
+            // 关闭上传文件退出框
+            uploadDialogVisible.value = false;
+            // 重置表单
+            proxy.$refs.oldModelDataFormRef.resetFields();
+            ElMessage.success("上传成功!");
+            reload();
+          } else {
+            ElMessage.error("请输入正确的内容");
+          }
+        });
+      }
+    })
+    .catch(() => {
+      // catch error
+    });
 };
-// ------------------------------------------
+// -----------------------------------------------------------------
+// -----------------------------------------------------------------
 
 onMounted(() => {
   // 该组件被启用时就要调用获取项目总数函数
@@ -610,7 +694,7 @@ onMounted(() => {
   flex-flow: column;
   height: 100%;
 }
-.el-aside {
+.side {
   height: 100%;
   border-right: rgb(226, 226, 226) 5px solid;
 }
@@ -676,5 +760,11 @@ onMounted(() => {
   height: 100%;
   border: 0px;
   display: flex;
+}
+.buttonDisplay {
+  padding-top: 50px;
+}
+.singleButton {
+  padding-top: 15px;
 }
 </style>

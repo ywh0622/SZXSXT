@@ -198,13 +198,28 @@
         >
           <div class="exchangeResource">
             <div class="m-4">
+              <p style="padding-bottom: 10px">模型软件</p>
+              <el-select
+                v-model="selectedModelSoftware"
+                placeholder="请选择模型软件"
+                @change="getSoftwareName"
+              >
+                <el-option
+                  v-for="item in modelSoftwareList"
+                  :key="item.modelSoftware"
+                  :label="item.modelSoftware"
+                  :value="item.modelSoftware"
+                />
+              </el-select>
+            </div>
+            <div class="m-4">
               <p style="padding-bottom: 10px">模型资源</p>
               <el-select
                 v-model="selectedResource"
                 placeholder="请选择模型资源"
               >
                 <el-option
-                  v-for="item in resourceList"
+                  v-for="item in modelResourceList"
                   :key="item.resourceName"
                   :label="item.resourceName"
                   :value="item.resourceName"
@@ -424,7 +439,7 @@ async function getUserData(config) {
     }
   } else {
     // 登陆用户非管理员
-    form_data.append("projectId", userAndProject.project.selectedProjectId);
+    form_data.append("project_id", userAndProject.project.selectedProjectId);
     const { code, data, message } = await proxy.$api.getUserLevel(form_data);
     console.log("code, data, message:", code, data, message);
     if (code == 200) {
@@ -775,7 +790,7 @@ const refuseJointProject = (row) => {
       if (code === 200) {
         ElMessage({
           showClose: true,
-          message: "取消成功",
+          message: "已拒绝!",
           type: "success",
         });
         reload();
@@ -793,26 +808,39 @@ const refuseJointProject = (row) => {
 // --------------------------------------------------------
 // --------------------------------------------------------
 
-// 用户所拥有的模型资源列表
-let resourceList = [];
-// 用户所选择要转移的资源名称
-const selectedResource = ref("");
+// 用户所拥有的模型软件资源列表
+let modelSoftwareList = [];
+// 用户所选择要转移的模型软件名称
+let selectedModelSoftware = ref("");
+// 该模型软件下资源名称列表
+let modelResourceList = [];
+// 用户所选择要转移的模型软件下指定资源名称
+let selectedResource = ref("");
 
 // 获取所拥有的项目资源模型列表
 async function getResourcesList() {
   const { code, data, message } = await proxy.$api.getResourcesList();
   console.log("code, data, message:", code, data, message);
   if (code === 200) {
-    resourceList = data;
+    modelSoftwareList = data;
   } else {
     ElMessage.error(message);
   }
 }
 
+// 用户点击具体的模型软件后，得到该模型软件内的模型资源
+const getSoftwareName = (rows) => {
+  modelSoftwareList.forEach((item) => {
+    if (item.modelSoftware == rows) {
+      modelResourceList = item.resources;
+    }
+  });
+};
+
 // 可转移的目标用户列表
 let exchangeUserList = [];
 // 用户所选择的转移对象
-const selectedUserId = ref("");
+let selectedUserId = ref("");
 
 // 获取用户可转移的目标用户列表
 async function getOtherUserList() {
@@ -827,10 +855,12 @@ async function getOtherUserList() {
 
 // 转移模型资源
 const submitResourceExchange = async () => {
-  if (selectedResource.value == "") {
-    ElMessage.error("请选择模型资源");
+  if (selectedModelSoftware.value == "") {
+    ElMessage.error("请选择模型软件!");
+  } else if (selectedResource.value == "") {
+    ElMessage.error("请选择模型资源!");
   } else if (selectedUserId.value == "") {
-    ElMessage.error("请选择目标用户");
+    ElMessage.error("请选择目标用户!");
   } else {
     ElMessageBox.confirm("确定转移吗?")
       .then(async () => {

@@ -58,9 +58,16 @@
           </el-form-item>
           <!-- 按钮区域 -->
           <el-form-item>
-            <el-button type="primary" @click="login">登录</el-button>
+            <el-button type="primary" @click="login" :auto-insert-space="true"
+              >登录</el-button
+            >
             <span class="blank"></span>
-            <el-button type="primary" @click="userRegister">注册</el-button>
+            <el-button
+              type="primary"
+              @click="userRegister"
+              :auto-insert-space="true"
+              >注册</el-button
+            >
           </el-form-item>
         </el-form>
       </div>
@@ -82,45 +89,6 @@ const loginForm = reactive({
   password: "",
 });
 
-// 菜单栏地址
-const menuPath = reactive([
-  {
-    path: "/home",
-    name: "home",
-    label: "首页",
-    icon: "location",
-    url: "home/Home",
-  },
-  {
-    path: "/repo",
-    name: "repository",
-    label: "模型仓库",
-    icon: "house",
-    url: "repo/Repository",
-  },
-  {
-    path: "/relation",
-    name: "relation",
-    label: "模型关系",
-    icon: "house",
-    url: "relation/Relation",
-  },
-  {
-    path: "/user",
-    name: "user",
-    label: "项目管理",
-    icon: "Unlock",
-    url: "user/User",
-  },
-  {
-    path: "/history",
-    name: "version",
-    label: "历史版本",
-    icon: "documentCopy",
-    url: "history/VersionControl",
-  },
-]);
-
 const store = useStore();
 const router = useRouter();
 
@@ -135,10 +103,7 @@ const login = () => {
       const { code, data, message } = await proxy.$api.login(form_data);
       console.log("code, data, message", code, data, message);
       if (code === 200) {
-        // 如果code ==200, 表示登陆成功
-        // 将用户的菜单保存到store中的menu变量和浏览器中
-        store.commit("setMenu", menuPath);
-        store.commit("addMenu", router);
+        // store.commit("addMenu", router);
         // 设置登陆token
         store.commit("setToken", Mock.Random.guid());
         // 将当前用户名称和用户所拥有的项目传入store中
