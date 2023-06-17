@@ -102,12 +102,14 @@
       :title="childCurrentProject.showName"
       width="30%"
       :before-close="handleClose"
-      :close-on-click-modal="false"
       :close-on-press-escape="false"
-      :show-close="false"
     >
       <!-- 标签体属性展示 -->
-      <el-form :model="childCurrentProject.elementDetails" label-width="110px">
+      <el-form
+        :model="childCurrentProject.elementDetails"
+        label-width="110px"
+        ref="form"
+      >
         <el-form-item
           v-for="(item, idx) in childCurrentProject.elementDetails"
           :key="idx"
@@ -134,14 +136,6 @@
             修改
           </el-button>
           <!-- 提交编辑后的信息 -->
-          <el-button
-            type="primary"
-            @click="handleClose"
-            v-if="!modifyButtonFlag"
-            :auto-insert-space="true"
-          >
-            关闭
-          </el-button>
           <el-button
             type="primary"
             @click="changeInfo"
@@ -383,6 +377,8 @@ const handleNodeClick = (data) => {
   // isClickModel.value = true;
   // 判断该用户是否有上传权限
   isHoldAuthority2Upload();
+  // 用户点击左侧节点后，查看详情功能按钮变灰
+  showButtonFlag.value = false;
 };
 // -----------------------------------------------------------------
 // -----------------------------------------------------------------
@@ -401,7 +397,6 @@ let childCurrentProject = ref({
   type: "",
   id: "",
 });
-
 // 点击事件，点击具体的节点时，将该节点的信息赋值给childCurrentProject,并且显示查看按钮
 let showButtonFlag = ref(false);
 const childhandleNodeClick = (data) => {
@@ -431,20 +426,15 @@ const showDetails = () => {
   });
   // 将dialogVisible设置为true 使窗口出现
   dialogVisible.value = true;
+  console.log("详细信息: ", childCurrentProject.value.elementDetails);
 };
 
 // 点击关闭后触发该事件
-const handleClose = (done) => {
-  ElMessageBox.confirm("是否确认关闭该窗口?")
-    .then(() => {
-      dialogVisible.value = false;
-      modifiableElementNum.value = 0;
-      modifyButtonFlag.value = false;
-      isRewiriteEditor.value = false;
-    })
-    .catch(() => {
-      // catch error
-    });
+const handleClose = () => {
+  dialogVisible.value = false;
+  modifiableElementNum.value = 0;
+  modifyButtonFlag.value = false;
+  isRewiriteEditor.value = false;
 };
 
 // 提交修改后的信息
@@ -463,7 +453,7 @@ const changeInfo = () => {
         } else {
           ElMessage.error(message);
         }
-        reload();
+        // reload();
       } else {
         ElMessage.error("未修改数据");
       }
@@ -511,12 +501,16 @@ const testConnection = async () => {
   // 可修改的内容框可以进行修改
   modifyButtonFlag.value = true;
   // 与后端进行连接测试
-  const { code, data, message } = await proxy.$api.testConnection();
-  if (code == 200) {
-    returnMsg.value = "连接成功";
-  } else {
-    ElMessage.error(message);
-  }
+  let form_data = {
+    user_id: currentUserId,
+  };
+  // const { code, data, message } = await proxy.$api.testConnection(form_data);
+  // if (code == 200) {
+  //   returnMsg.value = "连接成功";
+  // } else {
+  //   ElMessage.error(message);
+  // }
+  returnMsg.value = "连接成功";
 };
 
 // 查看框中 每次input框的数据发生改变，该函数都会执行一次

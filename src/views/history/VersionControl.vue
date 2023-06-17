@@ -42,8 +42,13 @@
                 >
                   查看
                 </el-button>
-                <el-button size="small" type="danger" @click="cover(scope.row)">
-                  恢复
+                <el-button
+                  size="small"
+                  type="danger"
+                  @click="deleteVersion(scope.row)"
+                  v-if="currentUserLevel == '2'"
+                >
+                  删除
                 </el-button>
               </template>
             </el-table-column>
@@ -69,14 +74,20 @@
     size="35%"
     :before-close="handleClose"
   >
-    <el-space wrap>
-      <span>项目名称:{{ userAndProject.project.selectedProjectName }}</span>
-      <span
-        >模型名称:{{ currentModel.modeltype }}-{{ currentModel.showName }}</span
-      >
-      <span>创建时间:{{ selectedVersion.createTime }}</span>
-      <span>版本名称:{{ selectedVersion.versionName }}</span>
-    </el-space>
+    <el-form :model="selectedVersionDetail">
+      <el-form-item label="项目名称">
+        <el-input v-model="selectedVersionDetail.projectName" disabled />
+      </el-form-item>
+      <el-form-item label="模型名称">
+        <el-input v-model="selectedVersionDetail.modelName" disabled />
+      </el-form-item>
+      <el-form-item label="创建时间">
+        <el-input v-model="selectedVersionDetail.createTime" disabled />
+      </el-form-item>
+      <el-form-item label="版本名称">
+        <el-input v-model="selectedVersionDetail.versionName" disabled />
+      </el-form-item>
+    </el-form>
     <div class="tree">
       <el-tree
         :data="specifyVersionDetail.childProjects"
@@ -231,12 +242,22 @@ let specifyVersionDetail = ref("");
 let selectedVersion = ref("");
 
 // 获取指定版本详情
+// 版本信息
+let selectedVersionDetail = null;
 const getversionDetail = async (row) => {
   selectedVersion.value = row;
   const { code, data, message } =
     await proxy.$api.getSpecifyHistoryVersionDetailData();
   if (code === 200) {
     specifyVersionDetail.value = data;
+    // 版本信息
+    selectedVersionDetail = {
+      projectName: userAndProject.project.selectedProjectName,
+      modelName:
+        currentModel.value.modeltype + "-" + currentModel.value.showName,
+      createTime: selectedVersion.value.createTime,
+      versionName: selectedVersion.value.versionName,
+    };
     // 显示弹出框
     drawer.value = true;
   } else {
@@ -244,13 +265,13 @@ const getversionDetail = async (row) => {
   }
 };
 
-// 使用就版本覆盖
-const cover = async (row) => {
-  ElMessageBox.confirm("确定使用该版本吗?")
+// 删除版本
+const deleteVersion = async (row) => {
+  ElMessageBox.confirm("确定删除该版本吗?")
     .then(async () => {
-      const { code, data, message } = await proxy.$api.cover();
+      const { code, data, message } = await proxy.$api.deleteVersion();
       if (code === 200) {
-        ElMessage.success("覆盖成功");
+        ElMessage.success("删除成功");
         reload();
       } else {
         ElMessage.error(message);
@@ -274,13 +295,7 @@ const versionDetailProps = {
 
 // 点击修改用户权限提示框对话的x
 const handleClose = (done) => {
-  ElMessageBox.confirm("确定关闭?")
-    .then(() => {
-      done();
-    })
-    .catch(() => {
-      // catch error
-    });
+  done();
 };
 // ------------------------------------------------------
 
