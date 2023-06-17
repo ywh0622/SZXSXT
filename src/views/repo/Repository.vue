@@ -20,17 +20,6 @@
             >
               <span style="margin-left: 10px">{{ data.showName }}</span>
             </el-tooltip>
-
-            <!-- <el-button
-              style="margin-left: 15px"
-              size="small"
-              @click="uploadDialog"
-              v-if="
-                data.showName == currentModel &&
-                (currentUserLevel == '2' || hasAuthority == true)
-              "
-              >上传</el-button
-            > -->
           </template>
         </el-tree>
       </el-aside>
@@ -67,16 +56,6 @@
                     <template #default="{ data }">
                       <component class="icons" :is="data.icon"></component>
                       <span style="margin-left: 10px">{{ data.showName }}</span>
-                      <!-- <el-button
-                        style="margin-left: 600px"
-                        type="primary"
-                        size="small"
-                        @click="showDetails"
-                        v-if="
-                          showButtonFlag && data.id == childCurrentProject.id
-                        "
-                        >查看</el-button
-                      > -->
                     </template>
                   </el-tree>
                 </el-tab-pane>
@@ -90,6 +69,7 @@
                       <el-button
                         :icon="Search"
                         :disabled="!showButtonFlag"
+                        type="primary"
                         circle
                         @click="showDetails"
                       />
@@ -100,6 +80,7 @@
                       <el-button
                         @click="uploadDialog"
                         :icon="Upload"
+                        type="primary"
                         circle
                         :disabled="
                           !(currentUserLevel == '2' || hasAuthority == true)
@@ -333,7 +314,7 @@
 <script setup>
 import { ref, getCurrentInstance, onMounted, nextTick, reactive } from "vue";
 import { ElMessageBox, ElMessage } from "element-plus";
-import { SortUp, Search, Upload } from "@element-plus/icons-vue";
+import { SortUp, Search, Upload, UploadFilled } from "@element-plus/icons-vue";
 import { useRouter } from "vue-router";
 import { useStore } from "vuex";
 import { inject } from "vue";
@@ -356,6 +337,9 @@ console.log("userAndProject", userAndProject);
 store.commit("getCurrentUserLevel");
 const currentUserLevel = store.state.currentUserLevel;
 
+// 获取当前登陆用户id
+store.commit("getCurrentUserId");
+const currentUserId = store.state.currentUserId;
 // 左侧树形图
 // ------------------------------------------
 // ------------------------------------------
@@ -385,10 +369,8 @@ let currentModel = ref(null);
 let currentModelProjects = ref(null);
 const handleNodeClick = (data) => {
   console.log("点击左侧 el-tree 父节点信息:", data);
-  // 如果该节点下存在modelType属性，就将modelType属性的值赋给currentModel变量
-  if (data.modelType) {
-    currentModel.value = data.modelType;
-  }
+  // 将modelType属性的值赋给currentModel变量
+  currentModel.value = data.modelType;
   // 如果该节点下存在子项目，就将子项目的值赋给currentModelProjects变量
   if (data.childProjects) {
     currentModelProjects.value = data;
@@ -553,10 +535,21 @@ const handlerChange = (e) => {
 // 获取MA用户对项目各软件的操作权限
 const projectModelAuthorityList = ref(null);
 const getProjectModelAuthority = async () => {
-  const { code, data, message } = await proxy.$api.getProjectModelAuthority();
+  let form_data = {
+    project_id: userAndProject.project.selectedProjectId,
+    user_id: currentUserId,
+  };
+  const { code, data, message } = await proxy.$api.getProjectModelAuthority(
+    form_data
+  );
+  console.log(
+    "MA用户对项目各软件的操作权限 code, data, message:",
+    code,
+    data,
+    message
+  );
   if (code == 200) {
     projectModelAuthorityList.value = data;
-    console.log("用户对该项目各软件的权限: ", projectModelAuthorityList.value);
   } else {
     ElMessage.error(message);
   }
@@ -569,6 +562,7 @@ const isHoldAuthority2Upload = async () => {
   hasAuthority.value = false;
   console.log("currentUserLevel:", currentUserLevel);
   if (currentUserLevel == "1") {
+    console.log("当前为MA用户,需要进行上传权限判断!");
     projectModelAuthorityList.value.forEach((item) => {
       if (item["modelType"] == currentModel.value && item["hasAuthority"]) {
         hasAuthority.value = true;

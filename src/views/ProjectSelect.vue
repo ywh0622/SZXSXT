@@ -132,6 +132,7 @@ const Continue = () => {
       projectList.forEach((element) => {
         if (element.projectName == formData.selectedProjectName) {
           store.commit("setCurrentUserLevel", element.userLevel);
+          store.commit("setCurrentUserId", element.userId);
           formData.selectedProjectId = element.projectId;
           // 将用户的菜单保存到store中的menu变量和浏览器中
           // 游客用户

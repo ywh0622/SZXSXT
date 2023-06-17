@@ -97,9 +97,10 @@ const login = () => {
     if (valid) {
       // console.log("用户信息为:", loginForm);
       // 修改为form-data数据格式发送给后端
-      const form_data = new FormData();
-      form_data.append("username", loginForm.username);
-      form_data.append("password", loginForm.password);
+      let form_data = {
+        username: loginForm.username,
+        password: loginForm.password,
+      };
       const { code, data, message } = await proxy.$api.login(form_data);
       console.log("code, data, message", code, data, message);
       if (code === 200) {

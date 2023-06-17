@@ -66,7 +66,7 @@
   <el-drawer
     v-model="drawer"
     title="历史版本"
-    width="30%"
+    size="35%"
     :before-close="handleClose"
   >
     <el-space wrap>

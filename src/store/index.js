@@ -7,6 +7,7 @@ export default createStore({
         menu:[],
         token:'',
         currentUser:'',
+        currentUserId:'',
         currentUserProjectList:[],
         currentUserLevel:'',
         selectedProject:'',
@@ -99,6 +100,21 @@ export default createStore({
         clearCurrentUser(state){
             state.currentUser = ''
             localStorage.removeItem('currentUser')
+        },
+
+        // 存储当前用户ID
+        setCurrentUserId(state,val){
+            state.currentUserId = val
+            localStorage.setItem('currentUserId',JSON.stringify(val))
+        },
+        // 获取当前用户ID
+        getCurrentUserId(state){
+            state.currentUserId = JSON.parse(localStorage.getItem('currentUserId'))
+        },
+        // 退出后，清除当前用户ID
+        clearCurrentUserId(state){
+            state.currentUserId = ''
+            localStorage.removeItem('currentUserId')
         },
 
         // 存储当前用户对某个项目的权限

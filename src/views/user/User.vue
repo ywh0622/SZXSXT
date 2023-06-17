@@ -17,12 +17,7 @@
       </el-aside>
       <el-main>
         <!-- 用户权限 -->
-        <div
-          v-if="
-            currentFunction == 'userAuthority' &&
-            (currentUserLevel == '2' || currentUserLevel == '3')
-          "
-        >
+        <div v-if="currentFunction == 'userAuthority'">
           <!-- 用户数据展示区域 -->
           <div class="table">
             <el-table :data="list" style="width: 100%" height="500px">
@@ -90,9 +85,7 @@
           </el-drawer>
         </div>
         <!-- 邀请用户 -->
-        <div
-          v-else-if="currentFunction == 'inviteUser' && currentUserLevel == '2'"
-        >
+        <div v-else-if="currentFunction == 'inviteUser'">
           <!-- 邀请用户功能展示区域 -->
           <!-- 最顶部 搜索区域 -->
           <div class="user-header">
@@ -145,39 +138,44 @@
         <div v-else-if="currentFunction == 'joinProject'">
           <!-- 邀请用户功能展示区域 -->
           <div class="table">
-            <el-table
-              :data="projectInvitedList"
-              style="width: 100%"
-              height="500px"
-            >
-              <!-- 遍历给定的tableLabel来得到表格信息框名称 -->
-              <el-table-column
-                v-for="item in projectInvitedTableLabel"
-                :key="item.label"
-                :label="item.label"
-                :prop="item.prop"
-                :width="item.width"
-              />
-              <!-- 用户信息栏 -->
-              <el-table-column fixed="right" label="操作" width="200">
-                <template #default="scope">
-                  <el-button
-                    size="small"
-                    type="primary"
-                    @click="jointProject(scope.row)"
-                  >
-                    接受
-                  </el-button>
-                  <el-button
-                    size="small"
-                    type="danger"
-                    @click="refuseJointProject(scope.row)"
-                  >
-                    拒绝
-                  </el-button>
-                </template>
-              </el-table-column>
-            </el-table>
+            <div v-if="projectInvitedList == null">
+              <p>暂未收到项目加入邀请</p>
+            </div>
+            <div v-else>
+              <el-table
+                :data="projectInvitedList"
+                style="width: 100%"
+                height="500px"
+              >
+                <!-- 遍历给定的tableLabel来得到表格信息框名称 -->
+                <el-table-column
+                  v-for="item in projectInvitedTableLabel"
+                  :key="item.label"
+                  :label="item.label"
+                  :prop="item.prop"
+                  :width="item.width"
+                />
+                <!-- 用户信息栏 -->
+                <el-table-column fixed="right" label="操作" width="200">
+                  <template #default="scope">
+                    <el-button
+                      size="small"
+                      type="primary"
+                      @click="jointProject(scope.row)"
+                    >
+                      接受
+                    </el-button>
+                    <el-button
+                      size="small"
+                      type="danger"
+                      @click="refuseJointProject(scope.row)"
+                    >
+                      拒绝
+                    </el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
             <!-- 页码栏 -->
             <el-pagination
               small
@@ -185,17 +183,13 @@
               layout="prev, pager, next"
               :total="projectInvitedConfig.total"
               :page-size="projectInvitedConfig.limit"
-              @current-change="changeInvitePage"
+              @current-change="changeProjectInvitedPage"
               class="pager mt-4"
             />
           </div>
         </div>
         <!-- 资源转移 -->
-        <div
-          v-else-if="
-            currentFunction == 'exchangeResource' && currentUserLevel == '1'
-          "
-        >
+        <div v-else-if="currentFunction == 'exchangeResource'">
           <div class="exchangeResource">
             <div class="m-4">
               <p style="padding-bottom: 10px">模型软件</p>
@@ -215,25 +209,28 @@
             <div class="m-4">
               <p style="padding-bottom: 10px">模型资源</p>
               <el-select
-                v-model="selectedResource"
+                v-model="selectedResourceId"
                 placeholder="请选择模型资源"
               >
                 <el-option
                   v-for="item in modelResourceList"
-                  :key="item.resourceName"
+                  :key="item.resourceId"
                   :label="item.resourceName"
-                  :value="item.resourceName"
+                  :value="item.resourceId"
                 />
               </el-select>
             </div>
             <div class="m-4">
               <p style="padding-bottom: 10px">目标用户</p>
-              <el-select v-model="selectedUserId" placeholder="请选择目标用户">
+              <el-select
+                v-model="selectedUsername"
+                placeholder="请选择目标用户"
+              >
                 <el-option
                   v-for="item in exchangeUserList"
                   :key="item.userId"
                   :label="item.username"
-                  :value="item.userId"
+                  :value="item.username"
                 />
               </el-select>
             </div>
@@ -244,7 +241,59 @@
             </div>
           </div>
         </div>
-
+        <!-- SA用户审核PA用户申请 -->
+        <div v-else-if="currentFunction == 'paUserApply'">
+          <div class="table">
+            <div v-if="paUserApplyList == null">
+              <p>暂未收到PA用户申请</p>
+            </div>
+            <div v-else>
+              <el-table
+                :data="paUserApplyList"
+                style="width: 100%"
+                height="500px"
+              >
+                <!-- 遍历给定的tableLabel来得到表格信息框名称 -->
+                <el-table-column
+                  v-for="item in paUserApplyTableLabel"
+                  :key="item.label"
+                  :label="item.label"
+                  :prop="item.prop"
+                  :width="item.width"
+                />
+                <!-- 用户信息栏 -->
+                <el-table-column fixed="right" label="操作" width="200">
+                  <template #default="scope">
+                    <el-button
+                      size="small"
+                      type="primary"
+                      @click="acceptPa(scope.row)"
+                    >
+                      通过
+                    </el-button>
+                    <el-button
+                      size="small"
+                      type="danger"
+                      @click="acceptPa(scope.row)"
+                    >
+                      拒绝
+                    </el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
+            <!-- 页码栏 -->
+            <el-pagination
+              small
+              background
+              layout="prev, pager, next"
+              :total="paUserApplyConfig.total"
+              :page-size="paUserApplyConfig.limit"
+              @current-change="changePaUserApplyPage"
+              class="pager mt-4"
+            />
+          </div>
+        </div>
         <div class="user-main" v-else>您暂无权限查看此页面</div>
       </el-main>
     </el-container>
@@ -267,6 +316,10 @@ const router = useRouter();
 // 获取当前登陆用户对该项目的权限
 store.commit("getCurrentUserLevel");
 const currentUserLevel = store.state.currentUserLevel;
+
+// 获取当前登陆用户ID
+store.commit("getCurrentUserId");
+const currentUserId = store.state.currentUserId;
 
 // 获取当前登陆用户以及所操作的项目
 store.commit("getCurrentUser");
@@ -329,6 +382,11 @@ if (currentUserLevel == "2") {
       tagNickName: "joinProject",
       icon: "folder",
     },
+    {
+      tagName: "PA用户申请",
+      tagNickName: "paUserApply",
+      icon: "folder",
+    },
   ];
   currentFunction.value = "userAuthority";
 } else {
@@ -380,7 +438,7 @@ if (currentUserLevel == "2") {
       width: 180,
     },
     {
-      prop: "phoneNum",
+      prop: "phone",
       label: "手机号",
       width: 180,
     },
@@ -404,7 +462,7 @@ if (currentUserLevel == "2") {
       width: 180,
     },
     {
-      prop: "phoneNum",
+      prop: "phone",
       label: "手机号",
       width: 180,
     },
@@ -415,19 +473,19 @@ if (currentUserLevel == "2") {
 const config = reactive({
   total: 0,
   page: 1,
-  limit: 10,
-  name: "",
+  limit: 11,
 });
 
 // 获取用户信息
 async function getUserData(config) {
-  let form_data = new FormData();
-  form_data.append("limit", config.limit);
-  form_data.append("page", config.page);
   // 登陆用户为管理员
   if (currentUserLevel == "3") {
+    let form_data = {
+      pageSize: config.limit,
+      pageIndex: config.page,
+    };
     const { code, data, message } = await proxy.$api.getUserDetails(form_data);
-    console.log("code, data, message:", code, data, message);
+    // console.log("code, data, message:", code, data, message);
     if (code == 200) {
       // 获取信息总行数，页面中页码需要提前获取到总数量
       config.total = data.count;
@@ -439,9 +497,13 @@ async function getUserData(config) {
     }
   } else {
     // 登陆用户非管理员
-    form_data.append("project_id", userAndProject.project.selectedProjectId);
+    let form_data = {
+      pageSize: config.limit,
+      pageIndex: config.page,
+      project_id: userAndProject.project.selectedProjectId,
+    };
     const { code, data, message } = await proxy.$api.getUserLevel(form_data);
-    console.log("code, data, message:", code, data, message);
+    // console.log("登陆用户非管理员: code, data, message:", code, data, message);
     if (code == 200) {
       // 获取信息总行数，页面中页码需要提前获取到总数量
       config.total = data.count;
@@ -625,8 +687,13 @@ const inviteTableLabel = reactive([
     width: 180,
   },
   {
-    prop: "phoneNum",
+    prop: "phone",
     label: "手机号",
+    width: 180,
+  },
+  {
+    prop: "email",
+    label: "邮箱",
     width: 180,
   },
 ]);
@@ -640,11 +707,13 @@ const inviteConfig = reactive({
 
 // 获取可邀请用户信息
 async function getInviteUserList(inviteConfig) {
-  let form_data = new FormData();
-  form_data.append("limit", inviteConfig.limit);
-  form_data.append("page", inviteConfig.page);
+  let form_data = {
+    pageSize: inviteConfig.limit,
+    pageIndex: inviteConfig.page,
+    project_id: userAndProject.project.selectedProjectId,
+  };
   const { code, data, message } = await proxy.$api.getInviteUserList(form_data);
-  console.log("code, data, message:", code, data, message);
+  // console.log("code, data, message:", code, data, message);
   if (code == 200) {
     // 获取信息总行数，页面中页码需要提前获取到总数量
     inviteConfig.total = data.count;
@@ -661,11 +730,18 @@ const handleSearch = async () => {
   if (formInline.keyword == "") {
     ElMessage.error("请输入要搜索的用户名称!");
   } else {
-    const { code, data, message } = await proxy.$api.getSpecifyUser();
+    let form_data = {
+      username: formInline.keyword,
+    };
+    const { code, data, message } = await proxy.$api.getSpecifyUser(form_data);
     console.log("code, data, message:", code, data, message);
     if (code == 200) {
+      formInline.keyword = "";
       // 获取信息总行数，页面中页码需要提前获取到总数量
-      inviteUserList.value = data.map((item) => {
+      inviteConfig.limit = 11;
+      inviteConfig.page = 1;
+      inviteConfig.total = data.count;
+      inviteUserList.value = data.userList.map((item) => {
         return item;
       });
     } else {
@@ -684,10 +760,11 @@ const changeInvitePage = (page) => {
 const inviteUser = (row) => {
   ElMessageBox.confirm("确定邀请吗?")
     .then(async () => {
-      const form_data = new FormData();
-      form_data.append("user_id", row.id);
-      form_data.append("currentUserName", userAndProject.user);
-      const { code, data, message } = await proxy.$api.inviteUser();
+      let form_data = new FormData();
+      form_data.append("projet_id", userAndProject.project.selectedProjectId);
+      form_data.append("username", row.username);
+      const { code, data, message } = await proxy.$api.inviteUser(form_data);
+      // console.log("code, data, message:", code, data, message);
       if (code === 200) {
         ElMessage({
           showClose: true,
@@ -737,21 +814,27 @@ const projectInvitedConfig = reactive({
   limit: 11,
 });
 
-// 获取可邀请用户信息
+// 获取接收到的项目邀请信息
 async function getInviteProjectList(projectInvitedConfig) {
-  let form_data = new FormData();
-  form_data.append("limit", projectInvitedConfig.limit);
-  form_data.append("page", projectInvitedConfig.page);
+  let form_data = {
+    pageIndex: projectInvitedConfig.page,
+    pageSize: projectInvitedConfig.limit,
+    user_id: currentUserId,
+  };
   const { code, data, message } = await proxy.$api.getInviteProjectList(
     form_data
   );
-  console.log("code, data, message:", code, data, message);
+  // console.log("code, data, message:", code, data, message);
   if (code == 200) {
     // 获取信息总行数，页面中页码需要提前获取到总数量
-    projectInvitedConfig.total = data.count;
-    projectInvitedList.value = data.projectList.map((item) => {
-      return item;
-    });
+    if (data.count != 0) {
+      projectInvitedConfig.total = data.count;
+      projectInvitedList.value = data.projectList.map((item) => {
+        return item;
+      });
+    } else {
+      projectInvitedList.value = null;
+    }
   } else {
     ElMessage.error(message);
   }
@@ -767,11 +850,14 @@ const changeProjectInvitedPage = (page) => {
 const jointProject = (row) => {
   ElMessageBox.confirm("确定加入该项目吗?")
     .then(async () => {
-      const { code, data, message } = await proxy.$api.jointProject();
+      let form_data = new FormData();
+      form_data.append("project_id", row.projectId);
+      form_data.append("user_id", currentUserId);
+      const { code, data, message } = await proxy.$api.jointProject(form_data);
       if (code === 200) {
         ElMessage({
           showClose: true,
-          message: "已确认",
+          message: "已接收邀请!",
           type: "success",
         });
         reload();
@@ -786,7 +872,12 @@ const jointProject = (row) => {
 const refuseJointProject = (row) => {
   ElMessageBox.confirm("确定不加入该项目吗?")
     .then(async () => {
-      const { code, data, message } = await proxy.$api.refuseJointProject();
+      let form_data = new FormData();
+      form_data.append("project_id", row.projectId);
+      form_data.append("user_id", currentUserId);
+      const { code, data, message } = await proxy.$api.refuseJointProject(
+        form_data
+      );
       if (code === 200) {
         ElMessage({
           showClose: true,
@@ -815,12 +906,16 @@ let selectedModelSoftware = ref("");
 // 该模型软件下资源名称列表
 let modelResourceList = [];
 // 用户所选择要转移的模型软件下指定资源名称
-let selectedResource = ref("");
+let selectedResourceId = ref("");
 
 // 获取所拥有的项目资源模型列表
 async function getResourcesList() {
-  const { code, data, message } = await proxy.$api.getResourcesList();
-  console.log("code, data, message:", code, data, message);
+  let form_data = {
+    user_id: currentUserId,
+    project_id: userAndProject.project.selectedProjectId,
+  };
+  const { code, data, message } = await proxy.$api.getResourcesList(form_data);
+  // console.log("code, data, message:", code, data, message);
   if (code === 200) {
     modelSoftwareList = data;
   } else {
@@ -840,12 +935,16 @@ const getSoftwareName = (rows) => {
 // 可转移的目标用户列表
 let exchangeUserList = [];
 // 用户所选择的转移对象
-let selectedUserId = ref("");
+let selectedUsername = ref("");
 
 // 获取用户可转移的目标用户列表
 async function getOtherUserList() {
-  const { code, data, message } = await proxy.$api.getOtherUserList();
-  console.log("code, data, message:", code, data, message);
+  let form_data = {
+    user_id: currentUserId,
+    project_id: userAndProject.project.selectedProjectId,
+  };
+  const { code, data, message } = await proxy.$api.getOtherUserList(form_data);
+  // console.log("code, data, message:", code, data, message);
   if (code === 200) {
     exchangeUserList = data;
   } else {
@@ -857,14 +956,22 @@ async function getOtherUserList() {
 const submitResourceExchange = async () => {
   if (selectedModelSoftware.value == "") {
     ElMessage.error("请选择模型软件!");
-  } else if (selectedResource.value == "") {
+  } else if (selectedResourceId.value == "") {
     ElMessage.error("请选择模型资源!");
-  } else if (selectedUserId.value == "") {
+  } else if (selectedUsername.value == "") {
     ElMessage.error("请选择目标用户!");
   } else {
     ElMessageBox.confirm("确定转移吗?")
       .then(async () => {
-        const { code, data, message } = await proxy.$api.exchangeResource();
+        let form_data = {
+          newUsername: selectedUsername.value,
+          oldUsername: userAndProject.user,
+          modelId: selectedResourceId.value,
+        };
+        const { code, data, message } = await proxy.$api.exchangeResource(
+          form_data
+        );
+        console.log("code, data, message:", code, data, message);
         if (code == 200) {
           ElMessage({
             showClose: true,
@@ -882,19 +989,102 @@ const submitResourceExchange = async () => {
 // --------------------------------------------------------
 // --------------------------------------------------------
 
-onMounted(() => {
-  // 只有用户权限为2或者3时，才向后端请求数据，即用户为PA或者MA用户
-  if (currentUserLevel == "2" || currentUserLevel == "3") {
-    // console.log("当前用户权限为: ", currentUserLevel);
-    getUserData(config);
+// SA用户审核PA用户申请模块
+// --------------------------------------------------------
+// --------------------------------------------------------
+
+// pa用户申请列表
+const paUserApplyList = ref([]);
+
+// 表格头部内容
+const paUserApplyTableLabel = reactive([
+  {
+    prop: "username",
+    label: "用户名称",
+    width: 180,
+  },
+  {
+    prop: "department",
+    label: "部门",
+    width: 180,
+  },
+  {
+    prop: "email",
+    label: "邮箱",
+    width: 180,
+  },
+  {
+    prop: "phone",
+    label: "电话",
+    width: 180,
+  },
+]);
+
+// 分页配置
+const paUserApplyConfig = reactive({
+  total: 0,
+  page: 1,
+  limit: 11,
+});
+
+// 获取pa用户申请信息
+async function getPaUserApplyList(paUserApplyConfig) {
+  let form_data = {
+    pageIndex: paUserApplyConfig.page,
+    pageSize: paUserApplyConfig.limit,
+  };
+  const { code, data, message } = await proxy.$api.saGetPaApply(form_data);
+  // console.log("code, data, message:", code, data, message);
+  if (code == 200) {
+    // 获取信息总行数，页面中页码需要提前获取到总数量
+    if (data.count != 0) {
+      paUserApplyConfig.total = data.count;
+      paUserApplyList.value = data.userList.map((item) => {
+        return item;
+      });
+    } else {
+      paUserApplyList.value = null;
+    }
+  } else {
+    ElMessage.error(message);
   }
-  // 只有用户权限为2时，才向后端发送请求，获取可邀请用户列表
+}
+
+// 改变页码
+const changePaUserApplyPage = (page) => {
+  paUserApplyConfig.page = page;
+  getPaUserApplyList(paUserApplyConfig);
+};
+
+// 通过
+const acceptPa = (row) => {
+  ElMessageBox.confirm("确定通过吗?")
+    .then(async () => {})
+    .catch(() => {});
+};
+// 拒绝
+const refusePa = (row) => {
+  ElMessageBox.confirm("确定拒绝吗?")
+    .then(async () => {})
+    .catch(() => {});
+};
+// --------------------------------------------------------
+// --------------------------------------------------------
+onMounted(() => {
+  // 获取接收到的项目邀请列表
+  getInviteProjectList(projectInvitedConfig);
+  // 只有用户为SA用户
+  if (currentUserLevel == "3") {
+    // console.log("当前用户权限为: ", currentUserLevel);\
+    getUserData(config);
+    getPaUserApplyList(paUserApplyConfig);
+  }
+  // 只有用户为PA用户
   if (currentUserLevel == "2") {
     // console.log("当前用户权限为: ", currentUserLevel);
     getInviteUserList(inviteConfig);
+    getUserData(config);
   }
-  // 获取接收到的项目邀请列表
-  getInviteProjectList(projectInvitedConfig);
   // 只有用户为MA用户时，才存在资源转移功能
   if (currentUserLevel == "1") {
     getResourcesList();

@@ -12,7 +12,7 @@ const service = axios.create({
 // console.log("service:",service);
 // 在请求前做事情
 service.interceptors.request.use((req) => {
-    console.log('发送请求',req);
+    // console.log('发送请求',req);
     req.headers['token'] = 'vue-test'
     return req
 })
@@ -40,7 +40,7 @@ function request(options){
     if(options.method.toLowerCase() == 'get'){
         options.params = options.data
     }
-    
+    // console.log("options.params: ",options.data);
     // 对mock的处理
     let isMock = config.mock
     // console.log("isMock : " , isMock);

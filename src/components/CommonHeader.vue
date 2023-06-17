@@ -32,96 +32,120 @@
         </span>
         <template #dropdown>
           <el-dropdown-menu>
-            <el-dropdown-item @click="drawer = true">修改密码</el-dropdown-item>
             <el-dropdown-item @click="changeProject">切换项目</el-dropdown-item>
+            <el-dropdown-item @click="drawer = true">用户中心</el-dropdown-item>
             <el-dropdown-item @click="handleLoginOut">退出</el-dropdown-item>
           </el-dropdown-menu>
         </template>
       </el-dropdown>
     </div>
   </el-header>
-  <!-- 修改密码抽屉 -->
+  <!-- 用户中心抽屉 -->
   <el-drawer v-model="drawer" :before-close="handleClose">
     <template #header>
-      <h4>修改密码</h4>
+      <h4>用户中心</h4>
     </template>
-    <el-form
-      :model="passwordDetail"
-      label-width="120px"
-      ref="changePasswordRef"
-    >
-      <el-form-item label="用户名">
-        <el-input v-model="username" disabled />
-      </el-form-item>
-
-      <el-form-item
-        label="原密码"
-        prop="orignPassword"
-        :rules="[
-          {
-            required: true,
-            message: '原密码不能为空',
-          },
-        ]"
+    <div class="text">
+      <p>修改密码:</p>
+    </div>
+    <div class="changePassword">
+      <el-form
+        :model="passwordDetail"
+        label-width="120px"
+        ref="changePasswordRef"
       >
-        <el-input
-          v-model="passwordDetail.orignPassword"
-          placeholder="请输入原密码"
-          type="password"
-        />
-      </el-form-item>
+        <el-form-item label="用户名">
+          <el-input v-model="username" disabled />
+        </el-form-item>
 
-      <el-form-item
-        label="新密码"
-        prop="newPassword"
-        :rules="[
-          {
-            required: true,
-            message: '新密码不能为空',
-          },
-          {
-            min: 1,
-            max: 12,
-            message: '长度在 1 到 12个字符',
-            trigger: 'blur',
-          },
-        ]"
-      >
-        <el-input
-          v-model="passwordDetail.newPassword"
-          placeholder="请输入新密码"
-          type="password"
-        />
-      </el-form-item>
+        <el-form-item
+          label="新密码"
+          prop="newPassword"
+          :rules="[
+            {
+              required: true,
+              message: '新密码不能为空',
+            },
+            {
+              min: 4,
+              max: 12,
+              message: '长度在 4 到 12个字符',
+              trigger: 'blur',
+            },
+          ]"
+        >
+          <el-input
+            v-model="passwordDetail.newPassword"
+            placeholder="请输入新密码"
+            type="password"
+          />
+        </el-form-item>
 
-      <el-form-item
-        label="确认密码"
-        prop="confirmPassword"
-        :rules="[
-          {
-            required: true,
-            message: '确认密码不能为空',
-          },
-          { required: true, validator: equalToPassword, trigger: 'blur' },
-        ]"
-      >
-        <el-input
-          v-model="passwordDetail.confirmPassword"
-          placeholder="请输入确认密码"
-          type="password"
-        />
-      </el-form-item>
+        <el-form-item
+          label="确认密码"
+          prop="confirmPassword"
+          :rules="[
+            {
+              required: true,
+              message: '确认密码不能为空',
+            },
+            { required: true, validator: equalToPassword, trigger: 'blur' },
+          ]"
+        >
+          <el-input
+            v-model="passwordDetail.confirmPassword"
+            placeholder="请输入确认密码"
+            type="password"
+          />
+        </el-form-item>
 
-      <el-form-item>
-        <el-button type="primary" @click="onSubmit">确认修改</el-button>
-        <el-button @click="cancelClick">取消修改</el-button>
-      </el-form-item>
-    </el-form>
+        <el-form-item>
+          <el-button type="primary" @click="onSubmit" :auto-insert-space="true"
+            >确认</el-button
+          >
+        </el-form-item>
+      </el-form>
+    </div>
+    <div class="text">
+      <p>修改个人信息:</p>
+    </div>
+    <div>
+      <el-form :model="modifiedUserDetail" label-width="120px">
+        <el-form-item label="部门" prop="department">
+          <el-input
+            v-model="modifiedUserDetail.department"
+            :placeholder="userDetails.department"
+          />
+        </el-form-item>
+
+        <el-form-item label="邮箱" prop="department">
+          <el-input
+            v-model="modifiedUserDetail.email"
+            :placeholder="userDetails.email"
+          />
+        </el-form-item>
+
+        <el-form-item label="电话" prop="department">
+          <el-input
+            v-model="modifiedUserDetail.phone"
+            :placeholder="userDetails.phone"
+          />
+        </el-form-item>
+        <el-form-item>
+          <el-button
+            type="primary"
+            @click="changeUserDetails"
+            :auto-insert-space="true"
+            >确认</el-button
+          >
+        </el-form-item>
+      </el-form>
+    </div>
   </el-drawer>
 </template>
 
 <script setup>
-import { getCurrentInstance, reactive, ref } from "vue";
+import { getCurrentInstance, reactive, ref, onMounted } from "vue";
 import { useStore } from "vuex";
 import { computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
@@ -136,6 +160,10 @@ const router = useRouter();
 // 获取当前用户名称
 store.commit("getCurrentUser");
 const username = store.state.currentUser;
+
+// 获取当前用户ID
+store.commit("getCurrentUserId");
+const currentUserId = store.state.currentUserId;
 
 // 获取当前项目名称
 store.commit("getCurrentUserSelectedProject");
@@ -170,7 +198,6 @@ const drawer = ref(false);
 
 // 新密码
 const passwordDetail = reactive({
-  orignPassword: "",
   newPassword: "",
   confirmPassword: "",
 });
@@ -209,22 +236,76 @@ const onSubmit = () => {
         // 返回登陆页面
         handleLoginOut();
         // 显示修改成功信息
-        ElMessage({
-          showClose: true,
-          message: "密码修改成功",
-          type: "success",
-        });
+        ElMessage.success("密码修改成功!");
       } else {
         ElMessage.error(data.message);
       }
     } else {
-      ElMessage({
-        showClose: true,
-        message: "请输入正确的内容",
-        type: "error",
-      });
+      ElMessage.error("请输入正确的内容");
     }
   });
+};
+// -------------------------------------------------------
+
+// 用户个人信息修改
+// -------------------------------------------------------
+// 用户个人信息
+let userDetails = reactive({});
+
+// 获取用户个人信息
+const getCurrentUserDetails = async () => {
+  let form_data = {
+    user_id: currentUserId,
+  };
+  const { code, data, message } = await proxy.$api.getCurrentUserDetails(
+    form_data
+  );
+  // console.log("用户个人信息 code, data, message:", code, data, message);
+  if (code == 200) {
+    userDetails = data;
+  }
+};
+
+// 发给后端用户修改的个人数据信息
+let modifiedUserDetail = reactive({
+  user_id: currentUserId,
+  department: "",
+  email: "",
+  phone: "",
+});
+
+// 发送修改的个人信息
+const changeUserDetails = async () => {
+  if (
+    modifiedUserDetail.department == "" &&
+    modifiedUserDetail.email == "" &&
+    modifiedUserDetail.phone == ""
+  ) {
+    ElMessage.error("请修改个人信息!");
+  } else {
+    // 因为后端接收数据要为部门、邮箱、电话，因此如果前端只是修改了部门，邮箱电话没修改的话，要用
+    // 该用户自己的邮箱和电话来填充这个字段，要不然后端会报错
+    if (modifiedUserDetail.department == "") {
+      modifiedUserDetail.department = userDetails.department;
+    }
+    if (modifiedUserDetail.email == "") {
+      modifiedUserDetail.email = userDetails.email;
+    }
+    if (modifiedUserDetail.phone == "") {
+      modifiedUserDetail.phone = userDetails.phone;
+    }
+    const { code, data, message } = await proxy.$api.changeUserDetails(
+      modifiedUserDetail
+    );
+    console.log("修改个人信息 code, data, message:", code, data, message);
+    if (code == 200) {
+      drawer.value = false;
+      ElMessage.success("修改成功!");
+      reload();
+    } else {
+      ElMessage.error(data);
+    }
+  }
 };
 // -------------------------------------------------------
 
@@ -240,6 +321,7 @@ const handleLoginOut = () => {
   store.commit("cleanMenu");
   store.commit("clearToken");
   store.commit("clearCurrentUser");
+  store.commit("clearCurrentUserId");
   store.commit("clearCurrentUserLevel");
   store.commit("clearCurrentUserProjectList");
   store.commit("clearCurrentUserSelectedProject");
@@ -247,6 +329,10 @@ const handleLoginOut = () => {
     name: "login",
   });
 };
+
+onMounted(() => {
+  getCurrentUserDetails();
+});
 </script>
 
 <style lang="less" scoped>
@@ -278,5 +364,11 @@ header {
 :deep(.bread span) {
   color: #fff !important;
   cursor: pointer !important;
+}
+.text {
+  padding-bottom: 18px;
+}
+.changePassword {
+  padding-bottom: 50px;
 }
 </style>

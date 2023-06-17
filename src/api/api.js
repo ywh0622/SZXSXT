@@ -8,7 +8,7 @@ export default {
     login(params){
         return request({
             url: '/users/signin',    // '/login',
-            method: 'post',
+            method: 'get',
             // 真实上线或者请求服务器接口需要改成false
             mock:false,
             data:params
@@ -34,10 +34,30 @@ export default {
             data:params,
         })
     },
+    // 获取用户信息 完成
+    getCurrentUserDetails(params){
+        return request({
+            url: '/users/'+ params.user_id + '/details',
+            method: 'get',
+            // 真实上线或者请求服务器接口需要改成false
+            mock:false,
+            data:params,
+        })
+    },
+    // 修改用户信息 完成
+    changeUserDetails(params){
+        return request({
+            url: '/users/'+ params.user_id + '/details',
+            method: 'put',
+            // 真实上线或者请求服务器接口需要改成false
+            mock:false,
+            data:params,
+        })
+    },
     // PA账号查看项目下所有MA账号权限详情 完成
     getUserLevel(params){
         return request({
-            url: '/users/'+params.get('project_id')+'/members',
+            url:'/users/'+params.project_id+'/members',
             method: 'get',
             // 真实上线或者请求服务器接口需要改成false
             mock:false,
@@ -115,6 +135,106 @@ export default {
             data:null
         })
     },
+    // 可邀请的用户列表 完成
+    getInviteUserList(params){
+        return request({
+            url:'/users/pa/invite_members', // '/invited/users',           
+            method: 'get',
+            // 真实上线或者请求服务器接口需要改成false
+            mock:false,
+            data:params
+        })
+    },
+    // 获取搜索指定的用户 完成
+    getSpecifyUser(params){
+        return request({
+            url: '/users/pa/invite/search', //'/invite/specify',
+            method: 'get',
+            // 真实上线或者请求服务器接口需要改成false
+            mock:false,
+            data:params
+        })
+    },
+    // 邀请用户加入项目 完成
+    inviteUser(params){
+        return request({
+            url:'/users/pa/invite', // '/invited/user', 
+            method: 'post',
+            // 真实上线或者请求服务器接口需要改成false
+            mock:false,
+            data:params
+        })
+    },
+    // 收到项目的邀请信息列表 完成
+    getInviteProjectList(params){
+        return request({
+            url: '/audit/invite_message', // '/invited/projetcts',
+            method: 'get',
+            // 真实上线或者请求服务器接口需要改成false
+            mock:false,
+            data:params
+        })
+    },
+    // 接受邀请加入项目 完成
+    jointProject(params){
+        return request({
+            url: '/audit/invite',              // '/invited/project',
+            method: 'put',
+            // 真实上线或者请求服务器接口需要改成false
+            mock:false,
+            data:params
+        })
+    },
+    // 拒绝邀请加入项目 完成
+    refuseJointProject(params){
+        return request({
+            url: '/audit/invite',     // '/invited/projetct/refuse',     
+            method: 'delete',
+            // 真实上线或者请求服务器接口需要改成false
+            mock:false,
+            data:params
+        })
+    },
+    // 	MA用户所拥有的资源列表 完成
+    getResourcesList(params){
+        return request({
+            url: '/models/'+ params.user_id + '/model_resources',   //'/resources/list',
+            method: 'get',
+            // 真实上线或者请求服务器接口需要改成false
+            mock:false,
+            data:params
+        })
+    },
+    // 	MA用户转移模型资源时组内其余用户列表 完成
+    getOtherUserList(params){
+        return request({
+            url: '/projects/transfer/other_ma_users',       //'/resource/user',
+            method: 'get',
+            // 真实上线或者请求服务器接口需要改成false
+            mock:false,
+            data:params
+        })
+    },
+    // 	MA用户转移资源模型 完成
+    exchangeResource(params){
+        return request({
+            url: '/models/transfer',        //'/resource/exchange',
+            method: 'put',
+            // 真实上线或者请求服务器接口需要改成false
+            mock:false,
+            data:params
+        })
+    },
+    // 	SA用户审核PA用户申请 完成
+    saGetPaApply(params){
+        return request({
+            url: '/audit/sa/members', 
+            method: 'get',
+            // 真实上线或者请求服务器接口需要改成false
+            mock:false,
+            data:params
+        })
+    },
     // 提交项目模型修改后的数据 未完成
     submitModel(params){
         return request({
@@ -125,73 +245,13 @@ export default {
             data:params
         })
     },
-    // 可邀请的用户列表 未完成
-    getInviteUserList(params){
-        return request({
-            url: '/invited/users',
-            method: 'get',
-            // 真实上线或者请求服务器接口需要改成false
-            mock:true,
-            data:params
-        })
-    },
-    // 获取搜索指定的用户 未完成
-    getSpecifyUser(params){
-        return request({
-            url: '/invite/specify',
-            method: 'get',
-            // 真实上线或者请求服务器接口需要改成false
-            mock:true,
-            data:params
-        })
-    },
-    // 邀请用户加入项目 完成但未整合-----------
-    inviteUser(params){
-        return request({
-            url:'/invited/user',     // '/users/pa/invitation',
-            method: 'post',
-            // 真实上线或者请求服务器接口需要改成false
-            mock:true,
-            data:params
-        })
-    },
-    // 收到项目的邀请信息列表 未完成
-    getInviteProjectList(params){
-        return request({
-            url: '/invited/projetcts',
-            method: 'get',
-            // 真实上线或者请求服务器接口需要改成false
-            mock:true,
-            data:params
-        })
-    },
-    // 接受邀请加入项目 完成但未整合---------------------
-    jointProject(params){
-        return request({
-            url: '/invited/project',     // '/users/invitation',
-            method: 'put',
-            // 真实上线或者请求服务器接口需要改成false
-            mock:true,
-            data:params
-        })
-    },
-    // 拒绝邀请加入项目 完成但未整合---------------------
-    refuseJointProject(params){
-        return request({
-            url: '/invited/projetct/refuse',     //'/users/invitation',
-            method: 'delete',
-            // 真实上线或者请求服务器接口需要改成false
-            mock:true,
-            data:params
-        })
-    },
-    // MA用户查看当前项目各模型软件的操作权限，是否拥有文件上传的资格 未完成
+    // MA用户查看当前项目各模型软件的操作权限，是否拥有文件上传的资格 完成
     getProjectModelAuthority(params){
         return request({
-            url: '/project/model',
+            url: '/access/'+params.project_id+'/users_access',   //'/project/model',
             method: 'get',
             // 真实上线或者请求服务器接口需要改成false
-            mock:true,
+            mock:false,
             data:params
         })
     },
@@ -205,36 +265,7 @@ export default {
             data:params
         })
     },
-    // 	MA用户所拥有的资源列表 未完成
-    getResourcesList(params){
-        return request({
-            url: '/resources/list',
-            method: 'get',
-            // 真实上线或者请求服务器接口需要改成false
-            mock:true,
-            data:params
-        })
-    },
-    // 	MA用户转移模型资源时组内其余用户列表 未完成
-    getOtherUserList(params){
-        return request({
-            url: '/resource/user',
-            method: 'get',
-            // 真实上线或者请求服务器接口需要改成false
-            mock:true,
-            data:params
-        })
-    },
-    // 	MA用户转移资源模型 未完成
-    exchangeResource(params){
-        return request({
-            url: '/resource/exchange',
-            method: 'post',
-            // 真实上线或者请求服务器接口需要改成false
-            mock:true,
-            data:params
-        })
-    },
+    
     // 	获取项目历史版本信息 未完成
     getProjectHistoryVersionData(params){
         return request({
