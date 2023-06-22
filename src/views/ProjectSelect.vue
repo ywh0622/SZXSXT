@@ -1,9 +1,10 @@
 <template>
   <div class="login_style">
     <div class="login_box">
-      <div class="title_area">
-        <h1>数字线索系统</h1>
+      <div class="closeBtn">
+        <el-button :icon="CloseBold" @click="returnLastPage"></el-button>
       </div>
+      <h1 class="system_name">数字线索系统</h1>
       <el-form
         :model="formData"
         ref="selectedProjectRef"
@@ -46,6 +47,7 @@ import { reactive, getCurrentInstance, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useStore } from "vuex";
 import { ElMessage } from "element-plus";
+import { CloseBold } from "@element-plus/icons-vue";
 const { proxy } = getCurrentInstance();
 
 const store = useStore();
@@ -159,16 +161,26 @@ const Continue = () => {
     }
   });
 };
+
+// 返回上一个页面
+const returnLastPage = () => {
+  router.go(-1);
+};
 </script>
 
 <style lang="less" scoped>
 .title_area {
   text-align: center;
+}
+.closeBtn {
+  float: right;
+}
+.system_name {
   font-size: 200%;
+  text-align: center;
   padding-top: 30px;
   padding-bottom: 60px;
 }
-
 .login_style {
   background-color: #3671ab;
   // background-color: #2b4b6b;

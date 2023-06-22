@@ -132,7 +132,7 @@ export default {
             method: 'get',
             // 真实上线或者请求服务器接口需要改成false
             mock:false,
-            data:null
+            data:params
         })
     },
     // 可邀请的用户列表 完成
@@ -208,7 +208,7 @@ export default {
     // 	MA用户转移模型资源时组内其余用户列表 完成
     getOtherUserList(params){
         return request({
-            url: '/projects/transfer/other_ma_users',       //'/resource/user',
+            url: '/models/transfer/other_ma_users',       //'/resource/user',
             method: 'get',
             // 真实上线或者请求服务器接口需要改成false
             mock:false,
@@ -235,20 +235,70 @@ export default {
             data:params
         })
     },
-    // 提交项目模型修改后的数据 未完成
-    submitModel(params){
+    // 	SA用户通过PA用户申请 完成
+    saAcceptPaApply(params){
         return request({
-            url: '/submitModel',
+            url: '/audit/sa/pa_signup', 
+            method: 'put',
+            // 真实上线或者请求服务器接口需要改成false
+            mock:false,
+            data:params
+        })
+    },
+    // 	SA用户拒绝PA用户申请 完成
+    saRefusePaApply(params){
+        return request({
+            url: '/audit/sa/pa_signup', 
+            method: 'delete',
+            // 真实上线或者请求服务器接口需要改成false
+            mock:false,
+            data:params
+        })
+    },
+    // 	创建项目功能 完成
+    createNewProject(params){
+        return request({
+            url: '/projects/', 
             method: 'post',
             // 真实上线或者请求服务器接口需要改成false
-            mock:true,
+            mock:false,
+            data:params
+        })
+    },
+    // 	PA用户获取自己所拥有的项目资源列表 
+    getPaProject(params){
+        return request({
+            url: '/projects/pa/projects', 
+            method: 'get',
+            // 真实上线或者请求服务器接口需要改成false
+            mock:false,
+            data:params
+        })
+    },
+    // 	PA用户更新项目信息 
+    paUpdateProject(params){
+        return request({
+            url: '/projects/' + params.project_id + '/details', 
+            method: 'put',
+            // 真实上线或者请求服务器接口需要改成false
+            mock:false,
+            data:params
+        })
+    },
+    // 	PA用户删除项目资源
+    paDeleteProject(params){
+        return request({
+            url: '/projects/' + params.project_id, 
+            method: 'delete',
+            // 真实上线或者请求服务器接口需要改成false
+            mock:false,
             data:params
         })
     },
     // MA用户查看当前项目各模型软件的操作权限，是否拥有文件上传的资格 完成
     getProjectModelAuthority(params){
         return request({
-            url: '/access/'+params.project_id+'/users_access',   //'/project/model',
+            url: '/access/'+params.project_id+'/file_access',   //'/project/model',
             method: 'get',
             // 真实上线或者请求服务器接口需要改成false
             mock:false,
@@ -258,7 +308,17 @@ export default {
     // 上传文件 未完成
     uploadFile(params){
         return request({
-            url: '/upload',
+            url: '/models/', //'/upload',
+            method: 'post',
+            // 真实上线或者请求服务器接口需要改成false
+            mock:false,
+            data:params
+        })
+    },
+    // 提交项目模型修改后的数据 未完成
+    submitModel(params){
+        return request({
+            url: '/submitModel',
             method: 'post',
             // 真实上线或者请求服务器接口需要改成false
             mock:true,
@@ -303,28 +363,6 @@ export default {
             method: 'post',
             // 真实上线或者请求服务器接口需要改成false
             mock:true,
-            data:params
-        })
-    },
-
-    
-    // 与后端进行连接测试 测试 可删除
-    testPut(params){
-        return request({
-            url: '/putTest',
-            method: 'put',
-            // 真实上线或者请求服务器接口需要改成false
-            mock:false,
-            data:params
-        })
-    },
-    // 与后端进行连接测试 测试 可删除
-    testPost(params){
-        return request({
-            url: '/loginUser',
-            method: 'post',
-            // 真实上线或者请求服务器接口需要改成false
-            mock:false,
             data:params
         })
     },

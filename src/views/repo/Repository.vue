@@ -103,17 +103,20 @@
       width="30%"
       :before-close="handleClose"
       :close-on-press-escape="false"
+      @opened="dataVisualization"
     >
       <!-- 标签体属性展示 -->
       <el-form
         :model="childCurrentProject.elementDetails"
         label-width="110px"
-        ref="form"
+        ref="childCurrentProjectRef"
+        v-if="childCurrentProject.showName != 'Package <Graph View>'"
       >
         <el-form-item
           v-for="(item, idx) in childCurrentProject.elementDetails"
           :key="idx"
           :label="item['Name']"
+          prop="item['Value']"
         >
           <el-input
             @input="handlerChange"
@@ -124,6 +127,10 @@
           ></el-input>
         </el-form-item>
       </el-form>
+      <!-- wsy -->
+      <div v-if="childCurrentProject.showName == 'Package <Graph View>'">
+        <div id="echart" style="width: 400px; height: 400px"></div>
+      </div>
       <template #footer>
         <span class="dialog-footer">
           <!-- 点击后可修改的内容框改变 -->
@@ -218,7 +225,7 @@
           </el-form>
         </el-tab-pane>
         <!-- 覆盖旧模型 -->
-        <el-tab-pane label="覆盖旧模型" name="coverOldModel">
+        <el-tab-pane label="覆盖已有模型" name="coverOldModel">
           <el-form
             :model="oldModelData"
             label-width="90px"
@@ -312,6 +319,8 @@ import { SortUp, Search, Upload, UploadFilled } from "@element-plus/icons-vue";
 import { useRouter } from "vue-router";
 import { useStore } from "vuex";
 import { inject } from "vue";
+import * as echarts from "echarts"; //wsy
+import $ from "jquery";
 
 const reload = inject("reload");
 const { proxy } = getCurrentInstance();
@@ -346,6 +355,13 @@ const getProjectDetails = async () => {
   if (code == 200) {
     console.log("该项目在所有软件下的模型信息: ", data);
     projectList.value = data;
+    projectList.value.forEach((item) => {
+      if (item["models"] != null) {
+        item["models"].forEach((item1) => {
+          item1["model_id"] = item["model_id"];
+        });
+      }
+    });
   } else {
     ElMessage.error(message);
   }
@@ -361,20 +377,23 @@ const projectProps = {
 //
 let currentModel = ref(null);
 let currentModelProjects = ref(null);
+let currentModelId = ref(null);
 const handleNodeClick = (data) => {
-  console.log("点击左侧 el-tree 父节点信息:", data);
+  // console.log("点击左侧 el-tree 节点信息:", data);
   // 将modelType属性的值赋给currentModel变量
   currentModel.value = data.modelType;
+  // 将modelId属性赋值给currentModelId变量，ModelId值在getProjectDetails函数中已经完成
+  // 在各个模型软件下为每个模型添加这个模型软件的modelid
+  currentModelId.value = data.model_id;
   // 如果该节点下存在子项目，就将子项目的值赋给currentModelProjects变量
   if (data.childProjects) {
     currentModelProjects.value = data;
   } else {
     currentModelProjects.value = null;
   }
-  console.log("左侧 el-tree currentModel", currentModel);
-  console.log("左侧 el-tree currentModelProjects", currentModelProjects);
-  // 点击了左侧项目软件根节点
-  // isClickModel.value = true;
+  // console.log("左侧 el-tree currentModel", currentModel);
+  console.log("左侧 el-tree currentModelId", currentModelId);
+  // console.log("左侧 el-tree currentModelProjects", currentModelProjects);
   // 判断该用户是否有上传权限
   isHoldAuthority2Upload();
   // 用户点击左侧节点后，查看详情功能按钮变灰
@@ -435,6 +454,7 @@ const handleClose = () => {
   modifiableElementNum.value = 0;
   modifyButtonFlag.value = false;
   isRewiriteEditor.value = false;
+  proxy.$refs.childCurrentProjectRef.resetFields();
 };
 
 // 提交修改后的信息
@@ -504,13 +524,13 @@ const testConnection = async () => {
   let form_data = {
     user_id: currentUserId,
   };
-  // const { code, data, message } = await proxy.$api.testConnection(form_data);
-  // if (code == 200) {
-  //   returnMsg.value = "连接成功";
-  // } else {
-  //   ElMessage.error(message);
-  // }
-  returnMsg.value = "连接成功";
+  const { code, data, message } = await proxy.$api.testConnection(form_data);
+  if (code == 200) {
+    returnMsg.value = "连接成功";
+  } else {
+    ElMessage.error(message);
+  }
+  // returnMsg.value = "连接成功";
 };
 
 // 查看框中 每次input框的数据发生改变，该函数都会执行一次
@@ -520,6 +540,37 @@ const handlerChange = (e) => {
   // console.log("输入框改变: ", e);
   isRewiriteEditor.value = true;
 };
+
+// 数据可视化 wsy
+function dataVisualization() {
+  // 后期需要在这加判断，判断childCurrentProject.showName是否是数据可视化节点的名称以及当前项目软件是否为FMU
+  // 当前为死数据
+  var option = {
+    tooltip: {},
+    legend: {
+      data: ["数量", "其他"],
+    },
+    xAxis: {
+      data: ["1", "2", "3", "4", "5"],
+    },
+    yAxis: {},
+    series: [
+      {
+        name: "数量",
+        type: "line",
+        data: [5, 10, 18, 15, 24],
+      },
+      {
+        name: "其他",
+        type: "line",
+        data: [10, 7, 12, 20, 10],
+      },
+    ],
+  };
+  let echart = echarts.init(document.getElementById("echart"));
+  console.log(echart);
+  echart.setOption(option);
+}
 
 // 上传文件代码部分
 
@@ -535,12 +586,6 @@ const getProjectModelAuthority = async () => {
   };
   const { code, data, message } = await proxy.$api.getProjectModelAuthority(
     form_data
-  );
-  console.log(
-    "MA用户对项目各软件的操作权限 code, data, message:",
-    code,
-    data,
-    message
   );
   if (code == 200) {
     projectModelAuthorityList.value = data;
@@ -576,6 +621,8 @@ const newModelData = reactive({
   modelType: "",
   file: [],
   desc: "",
+  name: "",
+  type: "1", // 需要给我type对应的编号
 });
 // 存放覆盖旧模型的数据
 const oldModelData = reactive({
@@ -594,16 +641,10 @@ const uploadDialog = () => {
 
 // 点击关闭后触发该事件
 const uploadHandleClose = (done) => {
-  ElMessageBox.confirm("确认关闭该窗口?")
-    .then(() => {
-      uploadDialogVisible.value = false;
-      // 重置表单
-      proxy.$refs.newModelDataFormRef.resetFields();
-      proxy.$refs.oldModelDataFormRef.resetFields();
-    })
-    .catch(() => {
-      // catch error
-    });
+  uploadDialogVisible.value = false;
+  // 重置表单
+  proxy.$refs.newModelDataFormRef.resetFields();
+  proxy.$refs.oldModelDataFormRef.resetFields();
 };
 
 // 上传文件

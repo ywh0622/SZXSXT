@@ -1,9 +1,10 @@
 <template>
   <div class="login_style">
     <div class="login_box">
-      <div class="title_area">
-        <h1>用户注册</h1>
+      <div class="closeBtn">
+        <el-button :icon="CloseBold" @click="returnLastPage"></el-button>
       </div>
+      <div class="register"><h1>用户注册</h1></div>
 
       <el-form
         :inline="true"
@@ -107,14 +108,13 @@
         </el-form-item>
 
         <el-form-item
-          label="项目代码"
-          prop="projectId"
-          :rules="[{ required: true, message: '项目代码不能为空' }]"
+          label="项目名称"
+          prop="projectName"
+          :rules="[{ required: true, message: '项目名称不能为空' }]"
         >
           <el-input
-            v-model="registerForm.projectId"
-            placeholder="请输入项目代码"
-            :disabled="registerForm.role == 2 ? true : false"
+            v-model="registerForm.projectName"
+            :placeholder="isPa ? '请输入项目名称,后期可修改' : '请输入项目名称'"
           />
         </el-form-item>
 
@@ -171,10 +171,11 @@
 </template>
 
 <script setup>
-import { reactive, getCurrentInstance } from "vue";
+import { reactive, getCurrentInstance, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useStore } from "vuex";
 import { ElMessage } from "element-plus";
+import { CloseBold } from "@element-plus/icons-vue";
 
 const { proxy } = getCurrentInstance();
 
@@ -189,7 +190,7 @@ const registerForm = reactive({
   trueName: "",
   role: 2,
   department: "",
-  projectId: "项目管理员无需填写",
+  projectName: "",
   email: "",
   phone: "",
 });
@@ -226,12 +227,13 @@ const checkPhoneNumber = (rule, value, callback) => {
 };
 
 // 用户角色变化时触发
+let isPa = ref(true);
 const roleChange = (rows) => {
-  // 用户角色为2时，代表为项目管理员，不需要填写项目代码
+  // 用户角色为2时，代表为项目管理员，
   if (rows == 2) {
-    registerForm.projectId = "项目管理员无需填写";
+    isPa.value = true;
   } else {
-    registerForm.projectId = "";
+    isPa.value = false;
   }
 };
 
@@ -255,11 +257,7 @@ const onRegister = () => {
         ElMessage.error(data.message);
       }
     } else {
-      ElMessage({
-        showClose: true,
-        message: "请输入正确的内容",
-        type: "error",
-      });
+      ElMessage.error("请输入正确的内容!");
     }
   });
 };
@@ -268,16 +266,23 @@ const onRegister = () => {
 const resetForm = () => {
   proxy.$refs.registerFormRef.resetFields();
 };
+
+// 返回上一个页面
+const returnLastPage = () => {
+  router.go(-1);
+};
 </script>
 
 <style lang="less" scoped>
-.title_area {
+.closeBtn {
+  float: right;
+}
+.register {
   text-align: center;
   font-size: 140%;
   padding-top: 20px;
   padding-bottom: 30px;
 }
-
 .login_style {
   background-color: #3671ab;
   // background-color: #2b4b6b;

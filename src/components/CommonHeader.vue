@@ -23,21 +23,28 @@
       </el-breadcrumb>
     </div>
     <div class="r-content">
-      <el-dropdown>
-        <span class="el-dropdown-link">
-          <img :src="imgSrc" alt="" class="user" />
-          <el-icon class="el-icon--right">
-            <arrow-down />
-          </el-icon>
-        </span>
-        <template #dropdown>
-          <el-dropdown-menu>
-            <el-dropdown-item @click="changeProject">切换项目</el-dropdown-item>
-            <el-dropdown-item @click="drawer = true">用户中心</el-dropdown-item>
-            <el-dropdown-item @click="handleLoginOut">退出</el-dropdown-item>
-          </el-dropdown-menu>
-        </template>
-      </el-dropdown>
+      <div class="username">当前登陆用户: {{ username }}</div>
+      <div>
+        <el-dropdown>
+          <span class="el-dropdown-link">
+            <img :src="imgSrc" alt="" class="user" />
+            <el-icon class="el-icon--right">
+              <arrow-down />
+            </el-icon>
+          </span>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item @click="changeProject"
+                >切换项目</el-dropdown-item
+              >
+              <el-dropdown-item @click="drawer = true"
+                >用户中心</el-dropdown-item
+              >
+              <el-dropdown-item @click="handleLoginOut">退出</el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
+      </div>
     </div>
   </el-header>
   <!-- 用户中心抽屉 -->
@@ -204,14 +211,8 @@ const passwordDetail = reactive({
 
 // 抽屉关闭前的提示
 const handleClose = (done) => {
-  ElMessageBox.confirm("确定关闭?")
-    .then(() => {
-      reload();
-      done();
-    })
-    .catch(() => {
-      // catch error
-    });
+  reload();
+  done();
 };
 
 // 点击取消 关闭用户权限抽屉
@@ -348,6 +349,8 @@ header {
   padding-right: 8px;
 }
 .r-content {
+  display: flex;
+  align-items: center;
   .user {
     width: 40px;
     height: 40px;
@@ -370,5 +373,8 @@ header {
 }
 .changePassword {
   padding-bottom: 50px;
+}
+.username {
+  padding-right: 20px;
 }
 </style>

@@ -16,7 +16,7 @@
         </el-tree>
       </el-aside>
       <el-main>
-        <!-- 用户权限 -->
+        <!-- 用户权限  只有SA和PA用户有-->
         <div v-if="currentFunction == 'userAuthority'">
           <!-- 用户数据展示区域 -->
           <div class="table">
@@ -78,13 +78,17 @@
                 <el-switch v-model="item['hasAuthority']" />
               </el-form-item>
               <el-form-item>
-                <el-button type="primary" @click="onSubmit">提交修改</el-button>
-                <el-button @click="cancelClick">取消修改</el-button>
+                <el-button
+                  type="primary"
+                  @click="onSubmit"
+                  :auto-insert-space="true"
+                  >提交修改</el-button
+                >
               </el-form-item>
             </el-form>
           </el-drawer>
         </div>
-        <!-- 邀请用户 -->
+        <!-- 邀请用户 只有PA用户有-->
         <div v-else-if="currentFunction == 'inviteUser'">
           <!-- 邀请用户功能展示区域 -->
           <!-- 最顶部 搜索区域 -->
@@ -134,7 +138,7 @@
             />
           </div>
         </div>
-        <!-- 加入项目 -->
+        <!-- 加入项目 所有用户都有-->
         <div v-else-if="currentFunction == 'joinProject'">
           <!-- 邀请用户功能展示区域 -->
           <div class="table">
@@ -188,7 +192,7 @@
             />
           </div>
         </div>
-        <!-- 资源转移 -->
+        <!-- 资源转移 只有MA用户有-->
         <div v-else-if="currentFunction == 'exchangeResource'">
           <div class="exchangeResource">
             <div class="m-4">
@@ -274,7 +278,7 @@
                     <el-button
                       size="small"
                       type="danger"
-                      @click="acceptPa(scope.row)"
+                      @click="refusePa(scope.row)"
                     >
                       拒绝
                     </el-button>
@@ -293,6 +297,119 @@
               class="pager mt-4"
             />
           </div>
+        </div>
+        <!-- PA用户创建新项目 -->
+        <div v-else-if="currentFunction == 'createProject'">
+          <el-form
+            :model="newProject"
+            label-width="85px"
+            require-asterisk-position="right"
+            ref="createNewProjectRef"
+          >
+            <el-form-item
+              label="项目名称"
+              prop="name"
+              :rules="[
+                {
+                  required: true,
+                  message: '项目名称不能为空',
+                },
+              ]"
+            >
+              <el-input
+                v-model="newProject.name"
+                placeholder="请输入项目名称"
+              />
+            </el-form-item>
+            <el-form-item
+              label="项目简介"
+              prop="description"
+              :rules="[
+                {
+                  required: true,
+                  message: '项目简介不能为空',
+                },
+              ]"
+            >
+              <el-input
+                v-model="newProject.description"
+                placeholder="请输入项目简介"
+                type="textarea"
+              />
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" @click="createNewProject">
+                创建项目
+              </el-button>
+            </el-form-item>
+          </el-form>
+        </div>
+        <!-- PA用户项目资源管理 -->
+        <div v-else-if="currentFunction == 'projectManage'">
+          <!--项目资源展示区域 -->
+          <div class="table">
+            <el-table :data="paProjectList" style="width: 100%" height="500px">
+              <!-- 遍历给定的tableLabel来得到表格信息框名称 -->
+              <el-table-column
+                v-for="item in paProjectTableLabel"
+                :key="item.label"
+                :label="item.label"
+                :prop="item.prop"
+                :width="item.width"
+              />
+              <!-- 用户信息操作栏 -->
+              <el-table-column fixed="right" label="操作" width="500">
+                <template #default="scope">
+                  <el-button size="small" @click="paProjectEdit(scope.row)">
+                    更新项目资源
+                  </el-button>
+                  <el-button
+                    type="danger"
+                    size="small"
+                    @click="paDeleteProject(scope.row)"
+                  >
+                    删除项目资源
+                  </el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+            <!-- 页码栏 -->
+            <el-pagination
+              small
+              background
+              layout="prev, pager, next"
+              :total="paProjectConfig.total"
+              :page-size="paProjectConfig.limit"
+              @current-change="changePaProjectManagePage"
+              class="pager mt-4"
+            />
+          </div>
+          <!-- 修改项目资源 -->
+          <el-drawer v-model="projectDrawer" :before-close="handleProjectClose">
+            <template #header>
+              <h4>项目资源修改</h4>
+            </template>
+            <el-form
+              :model="updateProject"
+              ref="projectRef"
+              label-width="120px"
+            >
+              <el-form-item label="项目名称" prop="name">
+                <el-input v-model="updateProject.name" />
+              </el-form-item>
+              <el-form-item label="项目简介" prop="description">
+                <el-input v-model="updateProject.description" type="textarea" />
+              </el-form-item>
+              <el-form-item>
+                <el-button
+                  type="primary"
+                  @click="paUpdateProject"
+                  :auto-insert-space="true"
+                  >提交修改</el-button
+                >
+              </el-form-item>
+            </el-form>
+          </el-drawer>
         </div>
         <div class="user-main" v-else>您暂无权限查看此页面</div>
       </el-main>
@@ -348,8 +465,18 @@ if (currentUserLevel == "2") {
       icon: "user",
     },
     {
-      tagName: "项目加入确认",
+      tagName: "加入其他项目确认",
       tagNickName: "joinProject",
+      icon: "folder",
+    },
+    {
+      tagName: "创建项目",
+      tagNickName: "createProject",
+      icon: "folder",
+    },
+    {
+      tagName: "项目资源管理",
+      tagNickName: "projectManage",
       icon: "folder",
     },
   ];
@@ -358,7 +485,7 @@ if (currentUserLevel == "2") {
   //项目参与者 MA
   data = [
     {
-      tagName: "项目加入确认",
+      tagName: "加入其他项目确认",
       tagNickName: "joinProject",
       icon: "folder",
     },
@@ -378,7 +505,7 @@ if (currentUserLevel == "2") {
       icon: "lock",
     },
     {
-      tagName: "项目加入确认",
+      tagName: "加入其他项目确认",
       tagNickName: "joinProject",
       icon: "folder",
     },
@@ -411,6 +538,7 @@ const defaultProps = {
 // 保存当前用户点击的功能信息
 const handleNodeClick = (data) => {
   currentFunction.value = data.tagNickName;
+  // console.log("data",data);
 };
 
 // 修改用户权限模块
@@ -551,22 +679,10 @@ const handleEdit = (row) => {
   formUser.value = row;
 };
 
-// 点击取消 关闭用户权限抽屉
-function cancelClick() {
-  drawer.value = false;
-  reload();
-}
-
 // 点击修改用户权限提示框对话的x
 const handleUserLevelClose = (done) => {
-  ElMessageBox.confirm("确定关闭?")
-    .then(() => {
-      reload();
-      done();
-    })
-    .catch(() => {
-      // catch error
-    });
+  reload();
+  done();
 };
 
 // 对用户权限的修改或者移出项目组的数据，userLevelData直接发送个后端
@@ -1059,17 +1175,195 @@ const changePaUserApplyPage = (page) => {
 // 通过
 const acceptPa = (row) => {
   ElMessageBox.confirm("确定通过吗?")
-    .then(async () => {})
+    .then(async () => {
+      let form_data = new FormData();
+      form_data.append("user_id", row.userId);
+      const { code, data, message } = await proxy.$api.saAcceptPaApply(
+        form_data
+      );
+      // console.log("通过code, data, message:", code, data, message);
+      if (code == 200) {
+        ElMessage.success("通过该PA用户申请!");
+        getPaUserApplyList(paUserApplyConfig);
+      } else {
+        ElMessage.error(message);
+      }
+    })
     .catch(() => {});
 };
+
 // 拒绝
 const refusePa = (row) => {
   ElMessageBox.confirm("确定拒绝吗?")
-    .then(async () => {})
+    .then(async () => {
+      let form_data = new FormData();
+      form_data.append("user_id", row.userId);
+      const { code, data, message } = await proxy.$api.saRefusePaApply(
+        form_data
+      );
+      console.log("拒绝code, data, message:", code, data, message);
+      if (code == 200) {
+        ElMessage.success("已拒绝该PA用户申请!");
+        getPaUserApplyList(paUserApplyConfig);
+      } else {
+        ElMessage.error(message);
+      }
+    })
     .catch(() => {});
 };
 // --------------------------------------------------------
 // --------------------------------------------------------
+// PA创建项目功能
+// --------------------------------------------------------
+// --------------------------------------------------------
+let newProject = reactive({
+  userName: userAndProject.user,
+  name: "",
+  description: "",
+});
+
+const createNewProject = () => {
+  proxy.$refs.createNewProjectRef.validate(async (valid) => {
+    if (valid) {
+      const { code, data, message } = await proxy.$api.createNewProject(
+        newProject
+      );
+      if (code == 200) {
+        ElMessage.success("创建新项目成功!");
+        reload();
+      } else {
+        ElMessage.error(message);
+      }
+    } else {
+      ElMessage.error("请输入正确的内容!");
+    }
+  });
+};
+// --------------------------------------------------------
+// --------------------------------------------------------
+// PA用户项目资源管理
+// --------------------------------------------------------
+// --------------------------------------------------------
+// PA用户项目资源列表
+const paProjectList = ref([]);
+
+// 表格头部内容
+const paProjectTableLabel = reactive([
+  {
+    prop: "projectName",
+    label: "项目名称",
+    width: 180,
+  },
+]);
+
+// 分页配置
+const paProjectConfig = reactive({
+  total: 0,
+  page: 1,
+  limit: 11,
+});
+
+// 获取PA用户项目资源列表
+async function getPaProjectList(paProjectConfig) {
+  let form_data = {
+    user_id: currentUserId,
+    pageIndex: paProjectConfig.page,
+    pageSize: paProjectConfig.limit,
+  };
+  const { code, data, message } = await proxy.$api.getPaProject(form_data);
+  // console.log(
+  //   "获取PA用户项目资源列表 code, data, message:",
+  //   code,
+  //   data,
+  //   message
+  // );
+  if (code == 200) {
+    // 获取信息总行数，页面中页码需要提前获取到总数量
+    if (data.count != 0) {
+      paProjectConfig.total = data.count;
+      paProjectList.value = data.projects.map((item) => {
+        return item;
+      });
+    } else {
+      paProjectList.value = null;
+    }
+  } else {
+    ElMessage.error(message);
+  }
+}
+
+// 改变页码
+const changePaProjectManagePage = (page) => {
+  paProjectConfig.page = page;
+  getPaProjectList(paProjectConfig);
+};
+
+// 打开更新项目资源页面
+let projectDrawer = ref(false);
+
+// 详情页面数据
+let updateProject = reactive({
+  project_id: "",
+  name: "",
+  description: "",
+});
+
+// 显示PA用户项目资源详情抽屉
+const paProjectEdit = (row) => {
+  projectDrawer.value = true;
+  updateProject.project_id = row.projectId;
+  updateProject.name = row.projectName;
+  updateProject.description = row.description;
+};
+
+// 点击修改用户权限提示框对话的x
+const handleProjectClose = (done) => {
+  projectDrawer.value = false;
+  proxy.$refs.projectRef.resetFields();
+};
+
+// 更新项目信息
+const paUpdateProject = () => {
+  ElMessageBox.confirm("确定修改吗?")
+    .then(async () => {
+      const { code, data, message } = await proxy.$api.paUpdateProject(
+        updateProject
+      );
+      // console.log("通过code, data, message:", code, data, message);
+      if (code == 200) {
+        ElMessage.success("修改成功!");
+        projectDrawer.value = false;
+        getPaProjectList(paProjectConfig);
+      } else {
+        ElMessage.error(message);
+      }
+    })
+    .catch(() => {});
+};
+
+// 删除
+const paDeleteProject = (row) => {
+  ElMessageBox.confirm("确定删除吗?")
+    .then(async () => {
+      let form_data = {
+        project_id: row.projectId,
+      };
+      const { code, data, message } = await proxy.$api.paDeleteProject(
+        form_data
+      );
+      console.log("删除code, data, message:", code, data, message);
+      if (code == 200) {
+        ElMessage.success("删除成功!");
+        getPaProjectList(paProjectConfig);
+      } else {
+        ElMessage.error(message);
+      }
+    })
+    .catch(() => {});
+};
+// --------------------------------------------------------
+// --------------------------------------------------------
+
 onMounted(() => {
   // 获取接收到的项目邀请列表
   getInviteProjectList(projectInvitedConfig);
@@ -1084,6 +1378,7 @@ onMounted(() => {
     // console.log("当前用户权限为: ", currentUserLevel);
     getInviteUserList(inviteConfig);
     getUserData(config);
+    getPaProjectList(paProjectConfig);
   }
   // 只有用户为MA用户时，才存在资源转移功能
   if (currentUserLevel == "1") {
