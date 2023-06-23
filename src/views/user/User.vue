@@ -88,7 +88,7 @@
             </el-form>
           </el-drawer>
         </div>
-        <!-- 邀请用户 只有PA用户有-->
+        <!-- 邀请他人加入项目 只有PA用户有-->
         <div v-else-if="currentFunction == 'inviteUser'">
           <!-- 邀请用户功能展示区域 -->
           <!-- 最顶部 搜索区域 -->
@@ -138,12 +138,12 @@
             />
           </div>
         </div>
-        <!-- 加入项目 所有用户都有-->
+        <!-- 他人邀请加入项目 所有用户都有-->
         <div v-else-if="currentFunction == 'joinProject'">
           <!-- 邀请用户功能展示区域 -->
           <div class="table">
             <div v-if="projectInvitedList == null">
-              <p>暂未收到项目加入邀请</p>
+              <p>未收到其他项目的邀请</p>
             </div>
             <div v-else>
               <el-table
@@ -192,58 +192,121 @@
             />
           </div>
         </div>
-        <!-- 资源转移 只有MA用户有-->
-        <div v-else-if="currentFunction == 'exchangeResource'">
-          <div class="exchangeResource">
-            <div class="m-4">
-              <p style="padding-bottom: 10px">模型软件</p>
-              <el-select
-                v-model="selectedModelSoftware"
-                placeholder="请选择模型软件"
-                @change="getSoftwareName"
-              >
-                <el-option
-                  v-for="item in modelSoftwareList"
-                  :key="item.modelSoftware"
-                  :label="item.modelSoftware"
-                  :value="item.modelSoftware"
-                />
-              </el-select>
-            </div>
-            <div class="m-4">
-              <p style="padding-bottom: 10px">模型资源</p>
-              <el-select
-                v-model="selectedResourceId"
-                placeholder="请选择模型资源"
-              >
-                <el-option
-                  v-for="item in modelResourceList"
-                  :key="item.resourceId"
-                  :label="item.resourceName"
-                  :value="item.resourceId"
-                />
-              </el-select>
-            </div>
-            <div class="m-4">
-              <p style="padding-bottom: 10px">目标用户</p>
-              <el-select
-                v-model="selectedUsername"
-                placeholder="请选择目标用户"
-              >
-                <el-option
-                  v-for="item in exchangeUserList"
-                  :key="item.userId"
-                  :label="item.username"
-                  :value="item.username"
-                />
-              </el-select>
-            </div>
-            <div class="m-4" style="padding-top: 25px">
-              <el-button type="primary" @click="submitResourceExchange"
-                >确认转移</el-button
-              >
-            </div>
+        <!-- MA用户模型资源管理-->
+        <div v-else-if="currentFunction == 'modelResourceManage'">
+          <!--模型资源展示区域 -->
+          <div class="table">
+            <el-table
+              :data="maModelResourceList"
+              style="width: 100%"
+              height="500px"
+            >
+              <!-- 遍历给定的tableLabel来得到表格信息框名称 -->
+              <el-table-column
+                v-for="item in maModelResourceTableLabel"
+                :key="item.label"
+                :label="item.label"
+                :prop="item.prop"
+                :width="item.width"
+              />
+              <!-- 用户信息操作栏 -->
+              <el-table-column fixed="right" label="操作" width="500">
+                <template #default="scope">
+                  <el-button
+                    size="small"
+                    type="primary"
+                    @click="maModelResourceEdit(scope.row)"
+                  >
+                    更新
+                  </el-button>
+                  <el-button
+                    size="small"
+                    type="primary"
+                    @click="maModelResourceTransfer(scope.row)"
+                  >
+                    转移
+                  </el-button>
+                  <el-button
+                    type="danger"
+                    size="small"
+                    @click="maDeleteModelResource(scope.row)"
+                  >
+                    删除
+                  </el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+            <!-- 页码栏 -->
+            <el-pagination
+              small
+              background
+              layout="prev, pager, next"
+              :total="maModelResourceConfig.total"
+              :page-size="maModelResourceConfig.limit"
+              @current-change="changeMaModelResourceManagePage"
+              class="pager mt-4"
+            />
           </div>
+          <!-- 修改模型资源 -->
+          <el-drawer
+            v-model="modelResourceDrawer"
+            :before-close="handleModelResourceClose"
+          >
+            <template #header>
+              <h4>更新模型信息</h4>
+            </template>
+            <el-form
+              :model="updateModelResource"
+              ref="modelResourceRef"
+              label-width="120px"
+            >
+              <el-form-item label="模型名称" prop="name">
+                <el-input v-model="updateModelResource.name" />
+              </el-form-item>
+              <el-form-item label="模型简介" prop="description">
+                <el-input
+                  v-model="updateModelResource.description"
+                  type="textarea"
+                />
+              </el-form-item>
+              <el-form-item>
+                <el-button
+                  type="primary"
+                  @click="maUpdateModelResource"
+                  :auto-insert-space="true"
+                  >确认</el-button
+                >
+              </el-form-item>
+            </el-form>
+          </el-drawer>
+          <!-- 转移模型资源 -->
+          <el-drawer
+            v-model="modelResourceTransferDrawer"
+            :before-close="handleModelResourceTransferClose"
+          >
+            <template #header>
+              <h4>转移模型资源</h4>
+            </template>
+            <el-select
+              v-model="selectedTransferUser"
+              placeholder="请选择目标用户"
+            >
+              <el-option
+                v-for="item in maTransferModelUserList"
+                :key="item.userId"
+                :label="item.username"
+                :value="item.username"
+              />
+            </el-select>
+            <div class="common">
+              <el-button
+                @click="maTransferModelResource"
+                type="primary"
+                :auto-insert-space="true"
+                >确认</el-button
+              >
+            </div>
+          </el-drawer>
         </div>
         <!-- SA用户审核PA用户申请 -->
         <div v-else-if="currentFunction == 'paUserApply'">
@@ -360,15 +423,26 @@
               <!-- 用户信息操作栏 -->
               <el-table-column fixed="right" label="操作" width="500">
                 <template #default="scope">
-                  <el-button size="small" @click="paProjectEdit(scope.row)">
-                    更新项目资源
+                  <el-button
+                    size="small"
+                    type="primary"
+                    @click="paProjectEdit(scope.row)"
+                  >
+                    更新
+                  </el-button>
+                  <el-button
+                    size="small"
+                    type="primary"
+                    @click="paProjectTransfer(scope.row)"
+                  >
+                    转移
                   </el-button>
                   <el-button
                     type="danger"
                     size="small"
                     @click="paDeleteProject(scope.row)"
                   >
-                    删除项目资源
+                    删除
                   </el-button>
                 </template>
               </el-table-column>
@@ -387,7 +461,7 @@
           <!-- 修改项目资源 -->
           <el-drawer v-model="projectDrawer" :before-close="handleProjectClose">
             <template #header>
-              <h4>项目资源修改</h4>
+              <h4>更新项目信息</h4>
             </template>
             <el-form
               :model="updateProject"
@@ -410,6 +484,87 @@
               </el-form-item>
             </el-form>
           </el-drawer>
+          <!-- 转移项目资源 -->
+          <el-drawer
+            v-model="projectTransferDrawer"
+            :before-close="handleProjectTransferClose"
+          >
+            <template #header>
+              <h4>转移项目资源</h4>
+            </template>
+            <el-select
+              v-model="targetTransferUser"
+              placeholder="请选择目标用户"
+            >
+              <el-option
+                v-for="item in paTransferProjectUserList"
+                :key="item.userId"
+                :label="item.username"
+                :value="item.username"
+              />
+            </el-select>
+            <div class="common">
+              <el-button
+                @click="paTransferProject"
+                type="primary"
+                :auto-insert-space="true"
+                >确认</el-button
+              >
+            </div>
+          </el-drawer>
+        </div>
+        <!-- PA用户审核非项目组用户申请 -->
+        <div v-else-if="currentFunction == 'otherUserApply'">
+          <div class="table">
+            <div v-if="maUserApplyList == null">
+              <p>暂未收到非组内用户申请加入项目</p>
+            </div>
+            <div v-else>
+              <el-table
+                :data="maUserApplyList"
+                style="width: 100%"
+                height="500px"
+              >
+                <!-- 遍历给定的tableLabel来得到表格信息框名称 -->
+                <el-table-column
+                  v-for="item in maUserApplyTableLabel"
+                  :key="item.label"
+                  :label="item.label"
+                  :prop="item.prop"
+                  :width="item.width"
+                />
+                <!-- 用户信息栏 -->
+                <el-table-column fixed="right" label="操作" width="200">
+                  <template #default="scope">
+                    <el-button
+                      size="small"
+                      type="primary"
+                      @click="acceptMa(scope.row)"
+                    >
+                      通过
+                    </el-button>
+                    <el-button
+                      size="small"
+                      type="danger"
+                      @click="refuseMa(scope.row)"
+                    >
+                      拒绝
+                    </el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
+            <!-- 页码栏 -->
+            <el-pagination
+              small
+              background
+              layout="prev, pager, next"
+              :total="maUserApplyConfig.total"
+              :page-size="maUserApplyConfig.limit"
+              @current-change="changeMaUserApplyPage"
+              class="pager mt-4"
+            />
+          </div>
         </div>
         <div class="user-main" v-else>您暂无权限查看此页面</div>
       </el-main>
@@ -460,16 +615,6 @@ if (currentUserLevel == "2") {
       icon: "lock",
     },
     {
-      tagName: "邀请用户加入",
-      tagNickName: "inviteUser",
-      icon: "user",
-    },
-    {
-      tagName: "加入其他项目确认",
-      tagNickName: "joinProject",
-      icon: "folder",
-    },
-    {
       tagName: "创建项目",
       tagNickName: "createProject",
       icon: "folder",
@@ -477,6 +622,21 @@ if (currentUserLevel == "2") {
     {
       tagName: "项目资源管理",
       tagNickName: "projectManage",
+      icon: "folder",
+    },
+    {
+      tagName: "邀请他人加入项目",
+      tagNickName: "inviteUser",
+      icon: "user",
+    },
+    {
+      tagName: "他人邀请加入项目",
+      tagNickName: "joinProject",
+      icon: "folder",
+    },
+    {
+      tagName: "他人申请加入项目  ",
+      tagNickName: "otherUserApply",
       icon: "folder",
     },
   ];
@@ -491,7 +651,7 @@ if (currentUserLevel == "2") {
     },
     {
       tagName: "模型资源转移",
-      tagNickName: "exchangeResource",
+      tagNickName: "modelResourceManage",
       icon: "switch",
     },
   ];
@@ -624,7 +784,7 @@ async function getUserData(config) {
       ElMessage.error(message);
     }
   } else {
-    // 登陆用户非管理员
+    // 登陆用户为PA
     let form_data = {
       pageSize: config.limit,
       pageIndex: config.page,
@@ -718,12 +878,8 @@ const onSubmit = () => {
       );
       if (code === 200) {
         drawer.value = false;
-        reload();
-        ElMessage({
-          showClose: true,
-          message: "用户权限修改成功",
-          type: "success",
-        });
+        getUserData(config);
+        ElMessage.success("用户权限修改成功");
       } else {
         ElMessage.error(message);
       }
@@ -735,20 +891,13 @@ const onSubmit = () => {
 const handleDelete = (row) => {
   ElMessageBox.confirm("确定删除?")
     .then(async () => {
-      // console.log("row", row);
-      // console.log("currentUserLevel", currentUserLevel);
-      // currentUserLevel=3表示为删除用户
       if (currentUserLevel == "3") {
         const form_data = new FormData();
         form_data.append("user_id", row.userId);
         const { code, data, message } = await proxy.$api.deleteUser(form_data);
         if (code === 200) {
-          ElMessage({
-            showClose: true,
-            message: "删除用户成功",
-            type: "success",
-          });
-          reload();
+          ElMessage.success("删除用户成功!");
+          getUserData(config);
         } else {
           ElMessage.error(message);
         }
@@ -761,12 +910,8 @@ const handleDelete = (row) => {
         );
         const { code, data, message } = await proxy.$api.removeUser(form_data);
         if (code === 200) {
-          ElMessage({
-            showClose: true,
-            message: "移除用户成功",
-            type: "success",
-          });
-          reload();
+          getUserData(config);
+          ElMessage.success("移除用户成功");
         } else {
           ElMessage.error(message);
         }
@@ -862,6 +1007,7 @@ const handleSearch = async () => {
       });
     } else {
       ElMessage.error(message);
+      getInviteUserList(inviteConfig);
     }
   }
 };
@@ -882,12 +1028,8 @@ const inviteUser = (row) => {
       const { code, data, message } = await proxy.$api.inviteUser(form_data);
       // console.log("code, data, message:", code, data, message);
       if (code === 200) {
-        ElMessage({
-          showClose: true,
-          message: "已发送邀请",
-          type: "success",
-        });
-        reload();
+        ElMessage.success("已发送邀请");
+        getInviteUserList(inviteConfig);
       } else {
         ElMessage.error(message);
       }
@@ -971,12 +1113,8 @@ const jointProject = (row) => {
       form_data.append("user_id", currentUserId);
       const { code, data, message } = await proxy.$api.jointProject(form_data);
       if (code === 200) {
-        ElMessage({
-          showClose: true,
-          message: "已接收邀请!",
-          type: "success",
-        });
-        reload();
+        ElMessage.success("已接收邀请");
+        getInviteProjectList(projectInvitedConfig);
       } else {
         ElMessage.error(message);
       }
@@ -995,12 +1133,8 @@ const refuseJointProject = (row) => {
         form_data
       );
       if (code === 200) {
-        ElMessage({
-          showClose: true,
-          message: "已拒绝!",
-          type: "success",
-        });
-        reload();
+        ElMessage.success("已拒绝!");
+        getInviteProjectList(projectInvitedConfig);
       } else {
         ElMessage.error(message);
       }
@@ -1011,96 +1145,190 @@ const refuseJointProject = (row) => {
 // --------------------------------------------------------
 // --------------------------------------------------------
 
-// 项目资源转移模块
+// MA用户模型资源管理
 // --------------------------------------------------------
 // --------------------------------------------------------
+// MA用户项目资源列表
+const maModelResourceList = ref([]);
 
-// 用户所拥有的模型软件资源列表
-let modelSoftwareList = [];
-// 用户所选择要转移的模型软件名称
-let selectedModelSoftware = ref("");
-// 该模型软件下资源名称列表
-let modelResourceList = [];
-// 用户所选择要转移的模型软件下指定资源名称
-let selectedResourceId = ref("");
+// 表格头部内容
+const maModelResourceTableLabel = reactive([
+  {
+    prop: "modelSoftware",
+    label: "模型软件",
+    width: 180,
+  },
+  {
+    prop: "resourceName",
+    label: "模型名称",
+    width: 180,
+  },
+]);
 
-// 获取所拥有的项目资源模型列表
-async function getResourcesList() {
+// 分页配置
+const maModelResourceConfig = reactive({
+  total: 0,
+  page: 1,
+  limit: 11,
+});
+
+// 获取MA用户模型资源列表
+async function getResourcesList(maModelResourceConfig) {
   let form_data = {
     user_id: currentUserId,
+    pageIndex: maModelResourceConfig.page,
+    pageSize: maModelResourceConfig.limit,
     project_id: userAndProject.project.selectedProjectId,
   };
   const { code, data, message } = await proxy.$api.getResourcesList(form_data);
-  // console.log("code, data, message:", code, data, message);
-  if (code === 200) {
-    modelSoftwareList = data;
+  if (code == 200) {
+    // 获取信息总行数，页面中页码需要提前获取到总数量
+    if (data.count != 0) {
+      maModelResourceConfig.total = data.count;
+      maModelResourceList.value = data.modelData.map((item) => {
+        return item;
+      });
+    } else {
+      maModelResourceList.value = null;
+    }
   } else {
     ElMessage.error(message);
   }
 }
 
-// 用户点击具体的模型软件后，得到该模型软件内的模型资源
-const getSoftwareName = (rows) => {
-  modelSoftwareList.forEach((item) => {
-    if (item.modelSoftware == rows) {
-      modelResourceList = item.resources;
-    }
-  });
-};
-
-// 可转移的目标用户列表
-let exchangeUserList = [];
-// 用户所选择的转移对象
-let selectedUsername = ref("");
-
-// 获取用户可转移的目标用户列表
-async function getOtherUserList() {
+// 获取MA用户转移模型资源的对象
+let maTransferModelUserList = [];
+// 用户所选择的目标用户
+let selectedTransferUser = ref("");
+const maTransferModelForUser = async () => {
   let form_data = {
-    user_id: currentUserId,
     project_id: userAndProject.project.selectedProjectId,
+    user_id: currentUserId,
   };
   const { code, data, message } = await proxy.$api.getOtherUserList(form_data);
-  // console.log("code, data, message:", code, data, message);
-  if (code === 200) {
-    exchangeUserList = data;
+  if (code == 200) {
+    maTransferModelUserList = data;
   } else {
     ElMessage.error(message);
   }
-}
+};
 
-// 转移模型资源
-const submitResourceExchange = async () => {
-  if (selectedModelSoftware.value == "") {
-    ElMessage.error("请选择模型软件!");
-  } else if (selectedResourceId.value == "") {
-    ElMessage.error("请选择模型资源!");
-  } else if (selectedUsername.value == "") {
-    ElMessage.error("请选择目标用户!");
+// 改变页码
+const changeMaModelResourceManagePage = (page) => {
+  maModelResourceConfig.page = page;
+  getResourcesList(maModelResourceConfig);
+};
+
+// 打开更新模型资源页面
+let modelResourceDrawer = ref(false);
+
+// 打开模型资源转移页面
+let modelResourceTransferDrawer = ref(false);
+
+// 详情页面数据
+let updateModelResource = reactive({
+  model_id: "",
+  name: "",
+  description: "",
+});
+
+// 显示MA用户模型资源详情抽屉
+const maModelResourceEdit = (row) => {
+  modelResourceDrawer.value = true;
+  updateModelResource.model_id = row.resourceId;
+  updateModelResource.name = row.resourceName;
+  updateModelResource.description = row.modelSoftware;
+  // console.log("row:", row);
+};
+
+// 用户选择要转移的模型Id
+let targetModelResourceId2Transfer = "";
+// 显示MA用模型目资源转移抽屉
+const maModelResourceTransfer = (row) => {
+  modelResourceTransferDrawer.value = true;
+  targetModelResourceId2Transfer = row.resourceId;
+};
+
+// 关闭更新模型资源页面
+const handleModelResourceClose = (done) => {
+  modelResourceDrawer.value = false;
+  proxy.$refs.modelResourceRef.resetFields();
+};
+
+// 关闭模型资源转移页面
+const handleModelResourceTransferClose = (done) => {
+  modelResourceTransferDrawer.value = false;
+  selectedTransferUser.value = "";
+};
+
+// 更新模型信息
+const maUpdateModelResource = () => {
+  if (updateModelResource.name == "") {
+    ElMessage.error("模型名不能为空!");
+  } else if (updateModelResource.description == "") {
+    ElMessage.error("模型简介不能为空!");
   } else {
-    ElMessageBox.confirm("确定转移吗?")
+    ElMessageBox.confirm("确定修改吗?")
       .then(async () => {
-        let form_data = {
-          newUsername: selectedUsername.value,
-          oldUsername: userAndProject.user,
-          modelId: selectedResourceId.value,
-        };
-        const { code, data, message } = await proxy.$api.exchangeResource(
-          form_data
+        const { code, data, message } = await proxy.$api.updateModelResource(
+          updateModelResource
         );
-        console.log("code, data, message:", code, data, message);
+        console.log("更新模型信息code, data, message:", code, data, message);
         if (code == 200) {
-          ElMessage({
-            showClose: true,
-            message: "资源转移成功",
-            type: "success",
-          });
-          reload();
+          ElMessage.success("修改成功!");
+          modelResourceDrawer.value = false;
+          getResourcesList(maModelResourceConfig);
         } else {
           ElMessage.error(message);
         }
       })
       .catch(() => {});
   }
+};
+
+// 转移资源
+const maTransferModelResource = async () => {
+  if (selectedTransferUser.value == "") {
+    ElMessage.error("请选择目标用户!");
+  } else {
+    let form_data = {
+      modelId: targetModelResourceId2Transfer,
+      oldUsername: userAndProject.user,
+      newUsername: selectedTransferUser.value,
+    };
+    const { code, data, message } = await proxy.$api.exchangeResource(
+      form_data
+    );
+    if (code == 200) {
+      modelResourceTransferDrawer.value = false;
+      selectedTransferUser.value = "";
+      getResourcesList(maModelResourceConfig);
+      ElMessage.success("转移成功!");
+    } else {
+      ElMessage.error(message);
+    }
+  }
+};
+
+// 删除
+const maDeleteModelResource = (row) => {
+  ElMessageBox.confirm("确定删除吗?")
+    .then(async () => {
+      let form_data = {
+        model_id: row.resourceId,
+      };
+      const { code, data, message } = await proxy.$api.deleteModelResource(
+        form_data
+      );
+      console.log("删除code, data, message:", code, data, message);
+      if (code == 200) {
+        ElMessage.success("删除成功!");
+        getResourcesList(maModelResourceConfig);
+      } else {
+        ElMessage.error(message);
+      }
+    })
+    .catch(() => {});
 };
 // --------------------------------------------------------
 // --------------------------------------------------------
@@ -1271,12 +1499,6 @@ async function getPaProjectList(paProjectConfig) {
     pageSize: paProjectConfig.limit,
   };
   const { code, data, message } = await proxy.$api.getPaProject(form_data);
-  // console.log(
-  //   "获取PA用户项目资源列表 code, data, message:",
-  //   code,
-  //   data,
-  //   message
-  // );
   if (code == 200) {
     // 获取信息总行数，页面中页码需要提前获取到总数量
     if (data.count != 0) {
@@ -1292,6 +1514,24 @@ async function getPaProjectList(paProjectConfig) {
   }
 }
 
+// 获取PA用户转移项目资源的对象
+let paTransferProjectUserList = [];
+// 用户所选择的目标用户
+let targetTransferUser = ref("");
+const paTransferProjectForUser = async () => {
+  let form_data = {
+    project_id: userAndProject.project.selectedProjectId,
+  };
+  const { code, data, message } = await proxy.$api.paTransferProjectForUser(
+    form_data
+  );
+  if (code == 200) {
+    paTransferProjectUserList = data;
+  } else {
+    ElMessage.error(message);
+  }
+};
+
 // 改变页码
 const changePaProjectManagePage = (page) => {
   paProjectConfig.page = page;
@@ -1300,6 +1540,9 @@ const changePaProjectManagePage = (page) => {
 
 // 打开更新项目资源页面
 let projectDrawer = ref(false);
+
+// 打开项目资源转移页面
+let projectTransferDrawer = ref(false);
 
 // 详情页面数据
 let updateProject = reactive({
@@ -1316,29 +1559,73 @@ const paProjectEdit = (row) => {
   updateProject.description = row.description;
 };
 
-// 点击修改用户权限提示框对话的x
+// 用户选择要转移的项目Id
+let targetProjectId2Transfer = "";
+// 显示PA用户项目资源转移抽屉
+const paProjectTransfer = (row) => {
+  projectTransferDrawer.value = true;
+  targetProjectId2Transfer = row.projectId;
+};
+
+// 关闭更新项目资源页面
 const handleProjectClose = (done) => {
   projectDrawer.value = false;
   proxy.$refs.projectRef.resetFields();
 };
 
+// 关闭项目资源转移页面
+const handleProjectTransferClose = (done) => {
+  projectTransferDrawer.value = false;
+  targetTransferUser.value = "";
+};
+
 // 更新项目信息
 const paUpdateProject = () => {
-  ElMessageBox.confirm("确定修改吗?")
-    .then(async () => {
-      const { code, data, message } = await proxy.$api.paUpdateProject(
-        updateProject
-      );
-      // console.log("通过code, data, message:", code, data, message);
-      if (code == 200) {
-        ElMessage.success("修改成功!");
-        projectDrawer.value = false;
-        getPaProjectList(paProjectConfig);
-      } else {
-        ElMessage.error(message);
-      }
-    })
-    .catch(() => {});
+  if (updateProject.name == "") {
+    ElMessage.error("项目名不能为空!");
+  } else if (updateProject.description == "") {
+    ElMessage.error("项目简介不能为空!");
+  } else {
+    ElMessageBox.confirm("确定修改吗?")
+      .then(async () => {
+        const { code, data, message } = await proxy.$api.paUpdateProject(
+          updateProject
+        );
+        // console.log("通过code, data, message:", code, data, message);
+        if (code == 200) {
+          ElMessage.success("修改成功!");
+          projectDrawer.value = false;
+          getPaProjectList(paProjectConfig);
+        } else {
+          ElMessage.error(message);
+        }
+      })
+      .catch(() => {});
+  }
+};
+
+// 转移资源
+const paTransferProject = async () => {
+  if (targetTransferUser.value == "") {
+    ElMessage.error("请选择目标用户!");
+  } else {
+    let form_data = {
+      project_id: targetProjectId2Transfer,
+      oldUsername: userAndProject.user,
+      newUsername: targetTransferUser.value,
+    };
+    const { code, data, message } = await proxy.$api.paTransferProject(
+      form_data
+    );
+    if (code == 200) {
+      projectTransferDrawer.value = false;
+      targetTransferUser.value = "";
+      getPaProjectList(paProjectConfig);
+      ElMessage.success("转移成功!");
+    } else {
+      ElMessage.error(message);
+    }
+  }
 };
 
 // 删除
@@ -1355,6 +1642,120 @@ const paDeleteProject = (row) => {
       if (code == 200) {
         ElMessage.success("删除成功!");
         getPaProjectList(paProjectConfig);
+      } else {
+        ElMessage.error(message);
+      }
+    })
+    .catch(() => {});
+};
+
+// --------------------------------------------------------
+// --------------------------------------------------------
+// PA用户审核非组内用户加入项目申请模块
+// --------------------------------------------------------
+// --------------------------------------------------------
+
+// ma用户申请列表
+const maUserApplyList = ref([]);
+
+// 表格头部内容
+const maUserApplyTableLabel = reactive([
+  {
+    prop: "username",
+    label: "用户名称",
+    width: 180,
+  },
+  {
+    prop: "department",
+    label: "部门",
+    width: 180,
+  },
+  {
+    prop: "email",
+    label: "邮箱",
+    width: 180,
+  },
+  {
+    prop: "phone",
+    label: "电话",
+    width: 180,
+  },
+]);
+
+// 分页配置
+const maUserApplyConfig = reactive({
+  total: 0,
+  page: 1,
+  limit: 11,
+});
+
+// 获取ma用户申请信息
+async function getMaUserApplyList(maUserApplyConfig) {
+  let form_data = {
+    project_id: userAndProject.project.selectedProjectId,
+    pageIndex: maUserApplyConfig.page,
+    pageSize: maUserApplyConfig.limit,
+  };
+  const { code, data, message } = await proxy.$api.applyForPaProject(form_data);
+  // console.log("code, data, message:", code, data, message);
+  if (code == 200) {
+    // 获取信息总行数，页面中页码需要提前获取到总数量
+    if (data.count != 0) {
+      maUserApplyConfig.total = data.count;
+      maUserApplyList.value = data.userList.map((item) => {
+        return item;
+      });
+    } else {
+      maUserApplyList.value = null;
+    }
+  } else {
+    ElMessage.error(message);
+  }
+}
+
+// 改变页码
+const changeMaUserApplyPage = (page) => {
+  maUserApplyConfig.page = page;
+  getMaUserApplyList(maUserApplyConfig);
+};
+
+// 通过
+const acceptMa = (row) => {
+  ElMessageBox.confirm("确定通过吗?")
+    .then(async () => {
+      let form_data = new FormData();
+      form_data.append("user_id", row.userId);
+      form_data.append("project_id", userAndProject.project.selectedProjectId);
+      form_data.append("role", 1);
+      const { code, data, message } = await proxy.$api.acceptApplyForPaProject(
+        form_data
+      );
+      // console.log("通过code, data, message:", code, data, message);
+      if (code == 200) {
+        ElMessage.success("通过该MA用户申请!");
+        getMaUserApplyList(maUserApplyConfig);
+      } else {
+        ElMessage.error(message);
+      }
+    })
+    .catch(() => {});
+};
+
+// 拒绝
+const refuseMa = (row) => {
+  ElMessageBox.confirm("确定拒绝吗?")
+    .then(async () => {
+      let form_data = new FormData();
+      form_data.append("user_id", row.userId);
+      form_data.append("project_id", userAndProject.project.selectedProjectId);
+      form_data.append("role", 1);
+      const { code, data, message } = await proxy.$api.refuseApplyForPaProject(
+        form_data
+      );
+      // console.log("拒绝code, data, message:", code, data, message);
+      if (code == 200) {
+        ElMessage.success("已拒绝该MA用户申请!");
+        getMaUserApplyList(maUserApplyConfig);
       } else {
         ElMessage.error(message);
       }
@@ -1379,11 +1780,13 @@ onMounted(() => {
     getInviteUserList(inviteConfig);
     getUserData(config);
     getPaProjectList(paProjectConfig);
+    getMaUserApplyList(maUserApplyConfig);
+    paTransferProjectForUser();
   }
   // 只有用户为MA用户时，才存在资源转移功能
   if (currentUserLevel == "1") {
-    getResourcesList();
-    getOtherUserList();
+    getResourcesList(maModelResourceConfig);
+    maTransferModelForUser();
   }
 });
 </script>
@@ -1415,15 +1818,15 @@ onMounted(() => {
 .user-main {
   padding: 20px;
 }
-.exchangeResource {
-  display: flex;
-}
 .m-4 {
   padding-left: 20px;
 }
 .user-header {
   display: flex;
   width: 100%;
-  justify-content: right;
+  justify-content: left;
+}
+.common {
+  padding-top: 15px;
 }
 </style>>

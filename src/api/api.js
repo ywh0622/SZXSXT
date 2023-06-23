@@ -225,6 +225,26 @@ export default {
             data:params
         })
     },
+    // 	MA用户删除资源模型 完成
+    deleteModelResource(params){
+        return request({
+            url: '/models/' + params.model_id,        //'/resource/exchange',
+            method: 'delete',
+            // 真实上线或者请求服务器接口需要改成false
+            mock:false,
+            data:params
+        })
+    },
+    // 	MA用户更新资源模型 完成
+    updateModelResource(params){
+        return request({
+            url: '/models/' + params.model_id + '/details',        //'/resource/exchange',
+            method: 'put',
+            // 真实上线或者请求服务器接口需要改成false
+            mock:false,
+            data:params
+        })
+    },
     // 	SA用户审核PA用户申请 完成
     saGetPaApply(params){
         return request({
@@ -249,6 +269,36 @@ export default {
     saRefusePaApply(params){
         return request({
             url: '/audit/sa/pa_signup', 
+            method: 'delete',
+            // 真实上线或者请求服务器接口需要改成false
+            mock:false,
+            data:params
+        })
+    },
+     // PA用户审核非组内用户加入项目申请 完成
+     applyForPaProject(params){
+        return request({
+            url: '/audit/' + params.project_id + '/memebers', 
+            method: 'get',
+            // 真实上线或者请求服务器接口需要改成false
+            mock:false,
+            data:params
+        })
+    },   
+    // PA用户通过非组内用户加入项目申请 完成
+    acceptApplyForPaProject(params){
+        return request({
+            url: '/audit/pa/ma_apply', 
+            method: 'put',
+            // 真实上线或者请求服务器接口需要改成false
+            mock:false,
+            data:params
+        })
+    },
+    // PA用户拒绝非组内用户加入项目申请 完成
+    refuseApplyForPaProject(params){
+        return request({
+            url: '/audit/pa/ma_apply', 
             method: 'delete',
             // 真实上线或者请求服务器接口需要改成false
             mock:false,
@@ -290,6 +340,26 @@ export default {
         return request({
             url: '/projects/' + params.project_id, 
             method: 'delete',
+            // 真实上线或者请求服务器接口需要改成false
+            mock:false,
+            data:params
+        })
+    },
+    // 	PA用户转移项目资源的对象
+    paTransferProjectForUser(params){
+        return request({
+            url: '/projects/transfer/other_users', 
+            method: 'get',
+            // 真实上线或者请求服务器接口需要改成false
+            mock:false,
+            data:params
+        })
+    },
+    // 	PA用户项目资源归属权转移
+    paTransferProject(params){
+        return request({
+            url: '/projects/' + params.project_id + '/transfer', 
+            method: 'put',
             // 真实上线或者请求服务器接口需要改成false
             mock:false,
             data:params
