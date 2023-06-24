@@ -23,7 +23,7 @@ npm run lint
 ### Customize configuration
 See [Configuration Reference](https://cli.vuejs.org/config/).
 
-get请求发送数据格式为:
+get/PUT请求发送数据格式为:
 let form_data = {
     "username":"xxx",
     "id":"123"

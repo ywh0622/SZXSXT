@@ -2,7 +2,7 @@
   <div class="box">
     <el-container>
       <!-- 模型仓库页面左侧 -->
-      <el-aside width="16%" class="side">
+      <el-aside width="20%" class="side">
         <el-tree
           :data="projectList"
           :props="projectProps"
@@ -15,10 +15,10 @@
             <el-tooltip
               effect="dark"
               :content="data.showName"
-              :show-after="1000"
+              :show-after="500"
               placement="bottom-start"
             >
-              <span style="margin-left: 10px">{{ data.showName }}</span>
+              <span style="margin-left: 5px">{{ data.showName }}</span>
             </el-tooltip>
           </template>
         </el-tree>
@@ -82,9 +82,7 @@
                         :icon="Upload"
                         type="primary"
                         circle
-                        :disabled="
-                          !(currentUserLevel == '2' || hasAuthority == true)
-                        "
+                        :disabled="!(hasAuthority == true)"
                       />
                     </div>
                   </el-tooltip>
@@ -107,24 +105,26 @@
     >
       <!-- 标签体属性展示 -->
       <el-form
-        :model="childCurrentProject.elementDetails"
+        :model="ModifyName"
         label-width="110px"
         ref="childCurrentProjectRef"
         v-if="childCurrentProject.showName != 'Package <Graph View>'"
       >
-        <el-form-item
-          v-for="(item, idx) in childCurrentProject.elementDetails"
-          :key="idx"
-          :label="item['Name']"
-          prop="item['Value']"
-        >
+        <el-form-item label="name" prop="name">
           <el-input
             @input="handlerChange"
-            v-model="item['Value']"
-            :disabled="
-              modifyButtonFlag == true ? checkModified(item['Name']) : true
-            "
-          ></el-input>
+            v-model="ModifyName.name"
+            :disabled="modifyButtonFlag == true ? checkModified('name') : true"
+          />
+        </el-form-item>
+        <!-- 遍历 elementDetails中key不是name的属性 因为这些属性都无法修改，所以可以直接disable-->
+        <el-form-item
+          v-for="(item, idx) in elementDetails"
+          :key="idx"
+          :label="item['Name']"
+          v-show="item['Name'] != 'name'"
+        >
+          <el-input v-model="item['Value']" :disabled="true"></el-input>
         </el-form-item>
       </el-form>
       <!-- wsy -->
@@ -170,8 +170,8 @@
       width="30%"
       :before-close="uploadHandleClose"
     >
-      <!-- 创建新模型 -->
       <el-tabs type="border-card" v-model="activeTabName">
+        <!-- 创建新模型 -->
         <el-tab-pane label="创建新模型" name="createNewModel">
           <el-form
             :model="newModelData"
@@ -181,6 +181,18 @@
           >
             <el-form-item label="软件类型" prop="modelType">
               <el-input v-model="newModelData.modelType" disabled />
+            </el-form-item>
+            <el-form-item
+              label="模型名称"
+              prop="name"
+              :rules="[
+                {
+                  required: true,
+                  message: '模型名称不能为空',
+                },
+              ]"
+            >
+              <el-input v-model="newModelData.name" />
             </el-form-item>
             <el-form-item
               label="上传文件"
@@ -236,8 +248,30 @@
               <el-input v-model="oldModelData.modelType" disabled />
             </el-form-item>
             <el-form-item
+              label="选择模型"
+              prop="selectResource"
+              :rules="[
+                {
+                  required: true,
+                  message: '模型不能为空',
+                },
+              ]"
+            >
+              <el-select
+                v-model="oldModelData.selectResource"
+                placeholder="选择覆盖模型"
+              >
+                <el-option
+                  v-for="item in currnetModelContainResourceList"
+                  :key="item.resourceName"
+                  :label="item.resourceName"
+                  :value="item.model_id"
+                />
+              </el-select>
+            </el-form-item>
+            <el-form-item
               label="上传方式"
-              prop="uploadMode"
+              prop="isNewVersion"
               :rules="[
                 {
                   required: true,
@@ -246,7 +280,7 @@
               ]"
             >
               <el-select
-                v-model="oldModelData.uploadMode"
+                v-model="oldModelData.isNewVersion"
                 placeholder="选择上传方式"
               >
                 <el-option label="创建新版本" value="0" />
@@ -334,7 +368,6 @@ const userAndProject = reactive({
   user: store.state.currentUser,
   project: store.state.selectedProject,
 });
-console.log("userAndProject", userAndProject);
 
 // 获取当前登陆用户对该项目的权限
 store.commit("getCurrentUserLevel");
@@ -343,6 +376,14 @@ const currentUserLevel = store.state.currentUserLevel;
 // 获取当前登陆用户id
 store.commit("getCurrentUserId");
 const currentUserId = store.state.currentUserId;
+console.log(
+  "当前登陆用户: ",
+  userAndProject,
+  " 登陆用户对该项目的权限: ",
+  currentUserLevel,
+  " 当前登陆用户id: ",
+  currentUserId
+);
 // 左侧树形图
 // ------------------------------------------
 // ------------------------------------------
@@ -355,13 +396,6 @@ const getProjectDetails = async () => {
   if (code == 200) {
     console.log("该项目在所有软件下的模型信息: ", data);
     projectList.value = data;
-    projectList.value.forEach((item) => {
-      if (item["models"] != null) {
-        item["models"].forEach((item1) => {
-          item1["model_id"] = item["model_id"];
-        });
-      }
-    });
   } else {
     ElMessage.error(message);
   }
@@ -373,18 +407,19 @@ const projectProps = {
   label: "showName",
 };
 
-// 左侧 el-tree 点击事件 点击对应项目后，currentModel为当前点击项目软件信息,currentModelProjects为当前点击该项目软件下所属的某个模型
-//
+// 左侧 el-tree 点击事件 点击对应项目后。currentModel为当前点击项目软件信息,currentModelProjects为当前点击该项目软件下所属的某个模型。currentModelId为当前点击的模型Id,currnetModelContainResourceList为所点击的软件下所有的模型名称及id
 let currentModel = ref(null);
 let currentModelProjects = ref(null);
 let currentModelId = ref(null);
+let currnetModelContainResourceList = reactive([]);
 const handleNodeClick = (data) => {
   // console.log("点击左侧 el-tree 节点信息:", data);
-  // 将modelType属性的值赋给currentModel变量
   currentModel.value = data.modelType;
   // 将modelId属性赋值给currentModelId变量，ModelId值在getProjectDetails函数中已经完成
   // 在各个模型软件下为每个模型添加这个模型软件的modelid
-  currentModelId.value = data.model_id;
+  if (data.model_id) {
+    currentModelId.value = data.model_id;
+  }
   // 如果该节点下存在子项目，就将子项目的值赋给currentModelProjects变量
   if (data.childProjects) {
     currentModelProjects.value = data;
@@ -392,12 +427,25 @@ const handleNodeClick = (data) => {
     currentModelProjects.value = null;
   }
   // console.log("左侧 el-tree currentModel", currentModel);
-  console.log("左侧 el-tree currentModelId", currentModelId);
+  // console.log("左侧 el-tree currentModelId", currentModelId);
   // console.log("左侧 el-tree currentModelProjects", currentModelProjects);
   // 判断该用户是否有上传权限
   isHoldAuthority2Upload();
   // 用户点击左侧节点后，查看详情功能按钮变灰
   showButtonFlag.value = false;
+  // 获取所点击的软件下所有的模型 开始前先置空
+  if (currentModel.value != "MagicDraw") {
+    if (data.models) {
+      currnetModelContainResourceList = [];
+      data.models.forEach((item) => {
+        let resource = {
+          resourceName: item.showName,
+          model_id: item.model_id,
+        };
+        currnetModelContainResourceList.push(resource);
+      });
+    }
+  }
 };
 // -----------------------------------------------------------------
 // -----------------------------------------------------------------
@@ -412,17 +460,30 @@ const childProjectProps = {
 };
 
 // 右侧 el-tree 点击事件 点击对应项目后，childCurrentProject为当前点击项目详细信息
-let childCurrentProject = ref({
-  type: "",
-  id: "",
+let childCurrentProject = reactive({});
+// 右侧 el-tree 点击事件 点击对应项目后，elementDetails为当前项目点击查看后显示的内容 将name除去，因为只有name是可以修改的
+let elementDetails = reactive([]);
+//
+let ModifyName = reactive({
+  name: "",
 });
 // 点击事件，点击具体的节点时，将该节点的信息赋值给childCurrentProject,并且显示查看按钮
 let showButtonFlag = ref(false);
 const childhandleNodeClick = (data) => {
-  childCurrentProject.value = data;
+  childCurrentProject = data;
+  elementDetails = data.elementDetails;
+  elementDetails.forEach((item) => {
+    if (item.Name == "name") {
+      ModifyName.name = item.Value;
+    }
+  });
   console.log(
     "右侧 el-tree 点击事件childCurrentProject: ",
-    childCurrentProject
+    childCurrentProject,
+    " elementDetails: ",
+    elementDetails,
+    " ModifyName: ",
+    ModifyName.name
   );
   showButtonFlag.value = true;
 };
@@ -433,22 +494,33 @@ const dialogVisible = ref(false);
 // 点击查看后 将dialogVisible设置为true 使窗口出现
 // modifiableElementNum表示打开的标签属性中可以修改的属性数量，数量等于1时，打开的显示框中才会显示修改按钮
 let modifiableElementNum = ref(0);
-const showDetails = () => {
-  // 先设置为0，防止上一次打开后未清0
-  modifiableElementNum.value = 0;
-  // 是否显示修改按钮
-  childCurrentProject.value.elementDetails.forEach((item) => {
-    if (!checkModified(item.Name)) {
-      // 只要存在1个以上可修改的属性，就令modifiableElementNum为1，前端页面就展示这个按钮
-      modifiableElementNum.value = 1;
-    }
-  });
+const showDetails = async () => {
   // 将dialogVisible设置为true 使窗口出现
   dialogVisible.value = true;
-  console.log("详细信息: ", childCurrentProject.value.elementDetails);
+  // 先设置为0，防止上一次打开后未清0
+  modifiableElementNum.value = 0;
+  // 只有magicdraw模型才有修改功能，点击为magicdraw，向后端发请求，看是否拥有修改权限
+  // 然后再判断是否存在可修改元素来是否显示修改按钮
+  if ("MagicDraw" == currentModel.value) {
+    let form_data = {
+      project_id: userAndProject.project.selectedProjectId,
+      user_id: currentUserId,
+    };
+    const { code, data, message } =
+      await proxy.$api.getProjectModelModifyAuthority(form_data);
+    if (code == 200 && data.hasAuthority) {
+      elementDetails.forEach((item) => {
+        // console.log("elementDetails items: ", item, " item.name", item.Name);
+        if (!checkModified(item.Name)) {
+          // 只要存在1个以上可修改的属性，就令modifiableElementNum为1，前端页面就展示这个按钮
+          modifiableElementNum.value = 1;
+        }
+      });
+    }
+  }
 };
 
-// 点击关闭后触发该事件
+// 查看框点击关闭后触发该事件
 const handleClose = () => {
   dialogVisible.value = false;
   modifiableElementNum.value = 0;
@@ -462,7 +534,20 @@ const changeInfo = () => {
   ElMessageBox.confirm("是否确认提交?")
     .then(async () => {
       if (isRewiriteEditor.value) {
-        const { code, data, message } = await proxy.$api.submitModel();
+        let form_data = {
+          userId: currentUserId,
+          // // elementName目前写死，只有name能改变
+          elementName: "name",
+          newValue: ModifyName.name,
+          model_id: currentModelId.value,
+          elementId: "",
+        };
+        elementDetails.forEach((item) => {
+          if (item.Name == "id") {
+            form_data.elementId = item.Value;
+          }
+        });
+        const { code, data, message } = await proxy.$api.submitModel(form_data);
         if (code == 200) {
           ElMessage.success("修改成功");
           dialogVisible.value = false;
@@ -470,10 +555,10 @@ const changeInfo = () => {
           modifyButtonFlag.value = false;
           returnMsg.value = "正在测试连接";
           isRewiriteEditor.value = false;
+          reload();
         } else {
           ElMessage.error(message);
         }
-        // reload();
       } else {
         ElMessage.error("未修改数据");
       }
@@ -489,7 +574,7 @@ const getModifiableElement = async () => {
   const { code, data, message } = await proxy.$api.getModifiableElement();
   if (code == 200) {
     modifiableElement.value = data;
-    console.log("项目中可以修改的属性名: ", data);
+    // console.log("项目中可以修改的属性名: ", data);
   } else {
     ElMessage.error(message);
   }
@@ -500,10 +585,10 @@ const checkModified = (element) => {
   let flag = true;
   modifiableElement.value.forEach((item) => {
     if (item["modelType"] === currentModel.value) {
-      item["attribute"].forEach((item1) => {
+      item["attribute"].forEach((detailElements) => {
         if (
-          item1["type"] == childCurrentProject.value["type"] &&
-          item1["modifiableName"] == element
+          detailElements["type"] == childCurrentProject["type"] &&
+          detailElements["modifiableName"] == element
         ) {
           flag = false;
         }
@@ -530,7 +615,6 @@ const testConnection = async () => {
   } else {
     ElMessage.error(message);
   }
-  // returnMsg.value = "连接成功";
 };
 
 // 查看框中 每次input框的数据发生改变，该函数都会执行一次
@@ -599,14 +683,20 @@ const getProjectModelAuthority = async () => {
 const hasAuthority = ref(false);
 const isHoldAuthority2Upload = async () => {
   hasAuthority.value = false;
-  console.log("currentUserLevel:", currentUserLevel);
-  if (currentUserLevel == "1") {
-    console.log("当前为MA用户,需要进行上传权限判断!");
-    projectModelAuthorityList.value.forEach((item) => {
-      if (item["modelType"] == currentModel.value && item["hasAuthority"]) {
-        hasAuthority.value = true;
-      }
-    });
+  // MagicDraw模型软件没有文件上传功能
+  if (currentModel.value != "MagicDraw") {
+    // 项目管理员默认拥有上传权限(magicDraw除外)
+    if (currentUserLevel == "2") {
+      hasAuthority.value = true;
+      console.log("当前为PA用户,拥有上传权限!");
+    } else {
+      console.log("当前非PA用户,需要进行上传权限判断!");
+      projectModelAuthorityList.value.forEach((item) => {
+        if (item["modelType"] == currentModel.value && item["hasAuthority"]) {
+          hasAuthority.value = true;
+        }
+      });
+    }
   }
 };
 
@@ -616,21 +706,34 @@ const uploadDialogVisible = ref(false);
 // 用户选中的tab页面
 const activeTabName = ref("createNewModel");
 
+// 模型软件对应编号
+let model2Id = {
+  Creo: 0,
+  Excel: 1,
+  "FMI(FMU)": 2,
+  MagicDraw: 3,
+  MATLAB: 4,
+  ReqIF: 5,
+  STK: 6,
+  Txt: 7,
+  VisualStudio: 8,
+};
+
 // 存放创建新模型的数据
-const newModelData = reactive({
+let newModelData = reactive({
   modelType: "",
+  name: "",
   file: [],
   desc: "",
-  name: "",
-  type: "1", // 需要给我type对应的编号
 });
 // 存放覆盖旧模型的数据
-const oldModelData = reactive({
+let oldModelData = reactive({
   modelType: "",
-  uploadMode: "",
+  selectResource: "",
+  isNewVersion: "",
   file: [],
-  desc: "",
 });
+
 // 点击上传按钮后打开上传提示框
 const uploadDialog = () => {
   uploadDialogVisible.value = true;
@@ -656,20 +759,34 @@ const uploadFile = () => {
         proxy.$refs.newModelDataFormRef.validate(async (valid) => {
           if (valid) {
             console.log("用户选中的标签：", activeTabName);
-            // 向后端发送信息
             const form_data = new FormData();
-            form_data.append("modelType", newModelData.modelType);
-            form_data.append("desc", newModelData.desc);
             newModelData.file.forEach((v) => {
               console.log("file: ", v);
               form_data.append("file", v.raw);
             });
-            // 关闭上传文件退出框
-            uploadDialogVisible.value = false;
-            // 重置表单
-            proxy.$refs.newModelDataFormRef.resetFields();
-            ElMessage.success("上传成功!");
-            reload();
+            form_data.append(
+              "projectId",
+              userAndProject.project.selectedProjectId
+            );
+            form_data.append("userId", currentUserId);
+            form_data.append("name", newModelData.name);
+            form_data.append("description", newModelData.desc);
+            form_data.append("type", model2Id[newModelData.modelType]);
+            form_data.append("isCover", 0);
+            // 向后端发送信息
+            const { code, data, message } = await proxy.$api.uploadFile(
+              form_data
+            );
+            if (code == 200) {
+              ElMessage.success("上传成功!");
+              // 关闭上传文件退出框
+              uploadDialogVisible.value = false;
+              // 重置表单
+              proxy.$refs.newModelDataFormRef.resetFields();
+              reload();
+            } else {
+              ElMessage.error("上传失败");
+            }
           } else {
             ElMessage.error("请输入正确的内容!");
           }
@@ -678,21 +795,33 @@ const uploadFile = () => {
         proxy.$refs.oldModelDataFormRef.validate(async (valid) => {
           if (valid) {
             console.log("用户选中的标签：", activeTabName);
-            // 向后端发送信息
             const form_data = new FormData();
-            form_data.append("modelType", oldModelData.modelType);
-            form_data.append("uploadMode", oldModelData.uploadMode);
-            form_data.append("desc", oldModelData.desc);
             oldModelData.file.forEach((v) => {
               console.log("file: ", v);
               form_data.append("file", v.raw);
             });
-            // 关闭上传文件退出框
-            uploadDialogVisible.value = false;
-            // 重置表单
-            proxy.$refs.oldModelDataFormRef.resetFields();
-            ElMessage.success("上传成功!");
-            reload();
+            form_data.append(
+              "projectId",
+              userAndProject.project.selectedProjectId
+            );
+            form_data.append("userId", currentUserId);
+            form_data.append("isCover", 1);
+            form_data.append("isNewVersion", oldModelData.isNewVersion);
+            form_data.append("modelId", oldModelData.selectResource);
+            // 向后端发送信息
+            const { code, data, message } = await proxy.$api.uploadFile(
+              form_data
+            );
+            if (code == 200) {
+              ElMessage.success("上传成功!");
+              // 关闭上传文件退出框
+              uploadDialogVisible.value = false;
+              // 重置表单
+              proxy.$refs.oldModelDataFormRef.resetFields();
+              reload();
+            } else {
+              ElMessage.error("上传失败");
+            }
           } else {
             ElMessage.error("请输入正确的内容");
           }

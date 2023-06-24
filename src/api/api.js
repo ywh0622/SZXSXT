@@ -375,7 +375,17 @@ export default {
             data:params
         })
     },
-    // 上传文件 未完成
+    // MA用户查看是否拥有修改模型的资格 完成
+    getProjectModelModifyAuthority(params){
+        return request({
+            url: '/access/' + params.project_id + '/modify_access',   //'/project/model',
+            method: 'get',
+            // 真实上线或者请求服务器接口需要改成false
+            mock:false,
+            data:params
+        })
+    },
+    // 上传文件 完成
     uploadFile(params){
         return request({
             url: '/models/', //'/upload',
@@ -385,13 +395,13 @@ export default {
             data:params
         })
     },
-    // 提交项目模型修改后的数据 未完成
+    // 提交项目模型修改后的数据 完成
     submitModel(params){
         return request({
-            url: '/submitModel',
-            method: 'post',
+            url: '/models/' + params.model_id + '/data',
+            method: 'put',
             // 真实上线或者请求服务器接口需要改成false
-            mock:true,
+            mock:false,
             data:params
         })
     },
