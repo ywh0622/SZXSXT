@@ -995,7 +995,7 @@ const handleSearch = async () => {
       username: formInline.keyword,
     };
     const { code, data, message } = await proxy.$api.getSpecifyUser(form_data);
-    console.log("code, data, message:", code, data, message);
+    // console.log("code, data, message:", code, data, message);
     if (code == 200) {
       formInline.keyword = "";
       // 获取信息总行数，页面中页码需要提前获取到总数量
@@ -1273,7 +1273,7 @@ const maUpdateModelResource = () => {
         const { code, data, message } = await proxy.$api.updateModelResource(
           updateModelResource
         );
-        console.log("更新模型信息code, data, message:", code, data, message);
+        // console.log("更新模型信息code, data, message:", code, data, message);
         if (code == 200) {
           ElMessage.success("修改成功!");
           modelResourceDrawer.value = false;
@@ -1320,7 +1320,7 @@ const maDeleteModelResource = (row) => {
       const { code, data, message } = await proxy.$api.deleteModelResource(
         form_data
       );
-      console.log("删除code, data, message:", code, data, message);
+      // console.log("删除code, data, message:", code, data, message);
       if (code == 200) {
         ElMessage.success("删除成功!");
         getResourcesList(maModelResourceConfig);
@@ -1429,7 +1429,7 @@ const refusePa = (row) => {
       const { code, data, message } = await proxy.$api.saRefusePaApply(
         form_data
       );
-      console.log("拒绝code, data, message:", code, data, message);
+      // console.log("拒绝code, data, message:", code, data, message);
       if (code == 200) {
         ElMessage.success("已拒绝该PA用户申请!");
         getPaUserApplyList(paUserApplyConfig);
@@ -1638,7 +1638,7 @@ const paDeleteProject = (row) => {
       const { code, data, message } = await proxy.$api.paDeleteProject(
         form_data
       );
-      console.log("删除code, data, message:", code, data, message);
+      // console.log("删除code, data, message:", code, data, message);
       if (code == 200) {
         ElMessage.success("删除成功!");
         getPaProjectList(paProjectConfig);

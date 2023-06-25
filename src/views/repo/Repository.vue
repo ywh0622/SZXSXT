@@ -508,7 +508,8 @@ const showDetails = async () => {
     };
     const { code, data, message } =
       await proxy.$api.getProjectModelModifyAuthority(form_data);
-    if (code == 200 && data.hasAuthority) {
+    // 如果是PA用户，则默认拥有修改权限
+    if (code == 200 && (data.hasAuthority || currentUserLevel == "2")) {
       elementDetails.forEach((item) => {
         // console.log("elementDetails items: ", item, " item.name", item.Name);
         if (!checkModified(item.Name)) {
@@ -613,6 +614,7 @@ const testConnection = async () => {
   if (code == 200) {
     returnMsg.value = "连接成功";
   } else {
+    returnMsg.value = "连接失败";
     ElMessage.error(message);
   }
 };
@@ -652,7 +654,7 @@ function dataVisualization() {
     ],
   };
   let echart = echarts.init(document.getElementById("echart"));
-  console.log(echart);
+  // console.log(echart);
   echart.setOption(option);
 }
 
@@ -758,10 +760,9 @@ const uploadFile = () => {
       if (activeTabName.value == "createNewModel") {
         proxy.$refs.newModelDataFormRef.validate(async (valid) => {
           if (valid) {
-            console.log("用户选中的标签：", activeTabName);
             const form_data = new FormData();
             newModelData.file.forEach((v) => {
-              console.log("file: ", v);
+              // console.log("file: ", v);
               form_data.append("file", v.raw);
             });
             form_data.append(
@@ -794,10 +795,9 @@ const uploadFile = () => {
       } else {
         proxy.$refs.oldModelDataFormRef.validate(async (valid) => {
           if (valid) {
-            console.log("用户选中的标签：", activeTabName);
             const form_data = new FormData();
             oldModelData.file.forEach((v) => {
-              console.log("file: ", v);
+              // console.log("file: ", v);
               form_data.append("file", v.raw);
             });
             form_data.append(

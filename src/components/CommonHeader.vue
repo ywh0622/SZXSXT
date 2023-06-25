@@ -298,7 +298,7 @@ const changeUserDetails = async () => {
     const { code, data, message } = await proxy.$api.changeUserDetails(
       modifiedUserDetail
     );
-    console.log("修改个人信息 code, data, message:", code, data, message);
+    // console.log("修改个人信息 code, data, message:", code, data, message);
     if (code == 200) {
       drawer.value = false;
       ElMessage.success("修改成功!");

@@ -124,7 +124,7 @@ const userAndProject = reactive({
   project: store.state.selectedProject,
 });
 
-console.log("userAndProject: ", userAndProject);
+// console.log("userAndProject: ", userAndProject);
 // 获取当前登陆用户对该项目的权限
 store.commit("getCurrentUserLevel");
 const currentUserLevel = store.state.currentUserLevel;
@@ -136,7 +136,7 @@ let projectList = ref([]);
 const getProjectHistoryVersionData = async () => {
   const { code, data, message } =
     await proxy.$api.getProjectHistoryVersionData();
-  console.log("code: ", code, " message: ", message, " data : ", data);
+  // console.log("code: ", code, " message: ", message, " data : ", data);
   if (code == 200) {
     projectList.value = data;
   } else {
@@ -156,7 +156,7 @@ let currentModel = ref("");
 //右侧表格展示的历史版本数据
 let versionHistoryData = ref([]);
 const handleNodeClick = async (node) => {
-  console.log("点击左侧 el-tree 节点信息:", node);
+  // console.log("点击左侧 el-tree 节点信息:", node);
   currentModel.value = node;
   // 如果该节点下存在flag属性,表示用户点击的二级目录，此时需要向后台请求数据
   if (node.flag) {
@@ -167,7 +167,7 @@ const handleNodeClick = async (node) => {
     form_data.append("modelName", currentModel.value.flag);
     const { code, data, message } =
       await proxy.$api.getSpecifyHistoryVersionData(form_data);
-    console.log("code: ", code, " message: ", message, " data : ", data);
+    // console.log("code: ", code, " message: ", message, " data : ", data);
     if (code == 200) {
       versionInvitedConfig.total = data.count;
       versionHistoryData.value = data.versionList.map((item) => {
@@ -218,7 +218,7 @@ const getVersionData = async (versionInvitedConfig) => {
   const { code, data, message } = await proxy.$api.getSpecifyHistoryVersionData(
     form_data
   );
-  console.log("code, data, message:", code, data, message);
+  // console.log("code, data, message:", code, data, message);
   if (code == 200) {
     // 获取信息总行数，页面中页码需要提前获取到总数量
     versionInvitedConfig.total = data.count;
