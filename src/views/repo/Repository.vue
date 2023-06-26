@@ -509,7 +509,7 @@ const showDetails = async () => {
     const { code, data, message } =
       await proxy.$api.getProjectModelModifyAuthority(form_data);
     // 如果是PA用户，则默认拥有修改权限
-    if (code == 200 && (data.hasAuthority || currentUserLevel == "2")) {
+    if (code == 200 && data.hasAuthority) {
       elementDetails.forEach((item) => {
         // console.log("elementDetails items: ", item, " item.name", item.Name);
         if (!checkModified(item.Name)) {
