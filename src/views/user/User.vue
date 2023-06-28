@@ -650,7 +650,7 @@ if (currentUserLevel == "2") {
       icon: "folder",
     },
     {
-      tagName: "模型资源转移",
+      tagName: "模型资源管理",
       tagNickName: "modelResourceManage",
       icon: "switch",
     },
