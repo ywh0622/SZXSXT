@@ -1,6 +1,6 @@
 <template>
   <div class="div1">
-    <img src="../../assets/home.png" alt="" style="margin: auto; height: 82%" />
+    <img src="../../assets/home.png" alt="" style="margin: auto; height: 80%" />
   </div>
 </template>
 

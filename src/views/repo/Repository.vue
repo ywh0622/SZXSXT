@@ -26,9 +26,6 @@
       <!-- 点击具体的模型仓库后的展示部分，即页面右侧 -->
       <el-main>
         <div v-if="currentModelProjects == null" style="font-size: 18px">
-          <div class="div1" v-if="currentModel == null">
-            <img src="../../assets/home.png" alt="" style="margin: auto" />
-          </div>
           <div class="div1" v-if="currentModel == 'MagicDraw'">
             <img src="../../assets/24598.png" alt="" style="margin: auto" />
           </div>
@@ -98,7 +95,7 @@
     <el-drawer
       v-model="dialogVisible"
       :title="childCurrentProject.showName"
-      width="30%"
+      size="30%"
       :before-close="handleClose"
       :close-on-press-escape="false"
       @opened="dataVisualization"
@@ -129,7 +126,10 @@
       </el-form>
       <!-- wsy -->
       <div v-if="childCurrentProject.showName == 'Package <Graph View>'">
-        <div id="echart" style="width: 400px; height: 400px"></div>
+        <div
+          id="echart"
+          style="margin: auto; width: 400px; height: 400px"
+        ></div>
       </div>
       <template #footer>
         <span class="dialog-footer">
@@ -166,7 +166,7 @@
     <!-- 上传文件框 -->
     <el-drawer
       v-model="uploadDialogVisible"
-      title="上传文件"
+      title="上传模型文件"
       width="30%"
       :before-close="uploadHandleClose"
     >
@@ -917,7 +917,6 @@ onMounted(() => {
 }
 .div1 {
   height: 100%;
-  border: 0px;
   display: flex;
 }
 .buttonDisplay {

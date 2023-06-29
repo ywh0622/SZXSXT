@@ -4,7 +4,7 @@ module.exports ={
       'Access-Control-Allow-Origin': '*',
     },
     port:8080,
-  //   // 上线服务器
+    // 上线服务器
   //   proxy:{
   //     ["/api"]:{
   //     target:'http://localhost:8081',
