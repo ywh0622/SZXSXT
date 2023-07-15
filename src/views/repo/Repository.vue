@@ -29,6 +29,32 @@
           <div class="div1" v-if="currentModel == 'MagicDraw'">
             <img src="../../assets/24598.png" alt="" style="margin: auto" />
           </div>
+          <div class="div1" v-if="currentModel == 'FMI(FMU)'">
+            <el-container>
+              <el-aside width="97%"></el-aside>
+              <el-main width="3">
+                <div class="buttonDisplay">
+                  <div class="row">
+                    <el-tooltip
+                      effect="dark"
+                      content="上传文件"
+                      placement="left"
+                    >
+                      <div class="singleButton">
+                        <el-button
+                          @click="uploadDialog"
+                          :icon="Upload"
+                          type="primary"
+                          circle
+                          :disabled="!(hasAuthority == true)"
+                        />
+                      </div>
+                    </el-tooltip>
+                  </div>
+                </div>
+              </el-main>
+            </el-container>
+          </div>
         </div>
         <div v-else>
           <el-container>

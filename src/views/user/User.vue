@@ -645,7 +645,7 @@ if (currentUserLevel == "2") {
   //项目参与者 MA
   data = [
     {
-      tagName: "加入其他项目确认",
+      tagName: "他人邀请加入项目",
       tagNickName: "joinProject",
       icon: "folder",
     },
@@ -665,7 +665,7 @@ if (currentUserLevel == "2") {
       icon: "lock",
     },
     {
-      tagName: "加入其他项目确认",
+      tagName: "他人邀请加入项目",
       tagNickName: "joinProject",
       icon: "folder",
     },
@@ -680,7 +680,7 @@ if (currentUserLevel == "2") {
   // 游客
   data = [
     {
-      tagName: "项目加入确认",
+      tagName: "他人邀请加入项目",
       tagNickName: "joinProject",
       icon: "folder",
     },
@@ -938,7 +938,7 @@ const formInline = reactive({
 // 表格头部内容
 const inviteTableLabel = reactive([
   {
-    prop: "username",
+    prop: "trueName",
     label: "用户名",
     width: 180,
   },
@@ -1039,7 +1039,7 @@ const inviteUser = (row) => {
 // --------------------------------------------------------
 // --------------------------------------------------------
 
-// 接受别人邀请模块
+// 他人邀请加入项目
 // --------------------------------------------------------
 // --------------------------------------------------------
 
@@ -1114,12 +1114,28 @@ const jointProject = (row) => {
       const { code, data, message } = await proxy.$api.jointProject(form_data);
       if (code === 200) {
         ElMessage.success("已接收邀请");
-        getInviteProjectList(projectInvitedConfig);
+        // getInviteProjectList(projectInvitedConfig);
+        // 成功加入该项目后，退出登陆
+        handleLoginOut();
       } else {
         ElMessage.error(message);
       }
     })
     .catch(() => {});
+};
+
+// 退出账号 清除localstorage信息
+const handleLoginOut = () => {
+  store.commit("cleanMenu");
+  store.commit("clearToken");
+  store.commit("clearCurrentUser");
+  store.commit("clearCurrentUserId");
+  store.commit("clearCurrentUserLevel");
+  store.commit("clearCurrentUserProjectList");
+  store.commit("clearCurrentUserSelectedProject");
+  router.push({
+    name: "login",
+  });
 };
 
 // 拒绝加入项目组
@@ -1148,7 +1164,7 @@ const refuseJointProject = (row) => {
 // MA用户模型资源管理
 // --------------------------------------------------------
 // --------------------------------------------------------
-// MA用户项目资源列表
+// MA用户模型资源列表
 const maModelResourceList = ref([]);
 
 // 表格头部内容
@@ -1480,6 +1496,11 @@ const paProjectTableLabel = reactive([
   {
     prop: "projectName",
     label: "项目名称",
+    width: 180,
+  },
+  {
+    prop: "description",
+    label: "项目简介",
     width: 180,
   },
 ]);
