@@ -405,37 +405,37 @@ export default {
             data:params
         })
     },
-    
-    // 	获取项目历史版本信息 未完成
+    // 	获取项目历史版本信息 完成
     getProjectHistoryVersionData(params){
         return request({
-            url: '/history/project',
+            url: '/versions/project',
             method: 'get',
             // 真实上线或者请求服务器接口需要改成false
-            mock:true,
+            mock:false,
             data:params
         })
     },
-    // 	获取某个模型项目历史版本列表 未完成
+    // 	获取某个模型项目历史版本列表 完成
     getSpecifyHistoryVersionData(params){
         return request({
-            url: '/history/project/model',
+            url: '/versions/' + params.model_id,
             method: 'get',
             // 真实上线或者请求服务器接口需要改成false
-            mock:true,
+            mock:false,
             data:params
         })
     },
-    // 	查看某个历史版本信息 未完成
+    // 	查看某个历史版本信息 完成
     getSpecifyHistoryVersionDetailData(params){
         return request({
-            url: '/history/project/model/specify',
+            url: '/versions/' + params.version_id + '/data',
             method: 'get',
             // 真实上线或者请求服务器接口需要改成false
-            mock:true,
+            mock:false,
             data:params
         })
     },
+    
     // 	使用历史版本覆盖新版本 未完成
     cover(params){
         return request({

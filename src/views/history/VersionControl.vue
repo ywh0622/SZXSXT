@@ -134,9 +134,13 @@ const currentUserLevel = store.state.currentUserLevel;
 // 获取模型所有历史版本信息
 let projectList = ref([]);
 const getProjectHistoryVersionData = async () => {
-  const { code, data, message } =
-    await proxy.$api.getProjectHistoryVersionData();
-  // console.log("code: ", code, " message: ", message, " data : ", data);
+  let form_data = {
+    project_id: userAndProject.project.selectedProjectId,
+  };
+  const { code, data, message } = await proxy.$api.getProjectHistoryVersionData(
+    form_data
+  );
+  // console.log("code: ", code, " message: ", message, " data: ", data);
   if (code == 200) {
     projectList.value = data;
   } else {
@@ -160,11 +164,11 @@ const handleNodeClick = async (node) => {
   currentModel.value = node;
   // 如果该节点下存在flag属性,表示用户点击的二级目录，此时需要向后台请求数据
   if (node.flag) {
-    let form_data = new FormData();
-    form_data.append("limit", 10);
-    form_data.append("page", 1);
-    form_data.append("modelType", currentModel.value.modelType);
-    form_data.append("modelName", currentModel.value.flag);
+    let form_data = {
+      pageSize: versionInvitedConfig.limit,
+      pageIndex: versionInvitedConfig.page,
+      model_id: currentModel.value.modelId,
+    };
     const { code, data, message } =
       await proxy.$api.getSpecifyHistoryVersionData(form_data);
     // console.log("code: ", code, " message: ", message, " data : ", data);
@@ -195,8 +199,8 @@ const versionTableLabel = reactive([
     width: 180,
   },
   {
-    prop: "versionNum",
-    label: "版本号",
+    prop: "versionCreator",
+    label: "创建者",
     width: 180,
   },
 ]);
@@ -246,8 +250,13 @@ let selectedVersion = ref("");
 let selectedVersionDetail = null;
 const getversionDetail = async (row) => {
   selectedVersion.value = row;
+  console.log("指定版本详情: ", row);
+  let form_data = {
+    version_id: selectedVersion.value.versionId,
+  };
   const { code, data, message } =
-    await proxy.$api.getSpecifyHistoryVersionDetailData();
+    await proxy.$api.getSpecifyHistoryVersionDetailData(form_data);
+  console.log("code, data, message:", code, data, message);
   if (code === 200) {
     specifyVersionDetail.value = data;
     // 版本信息
