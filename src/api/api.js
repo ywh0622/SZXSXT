@@ -435,7 +435,16 @@ export default {
             data:params
         })
     },
-    
+    // 根据模型Id查询模型数据信息wsy 完成
+    getModelsById(params){
+        return request({
+            url: '/models/' + params.model_id,
+            method: 'get',
+            // 真实上线或者请求服务器接口需要改成false
+            mock:false,
+            data:params
+        })
+    },
     // 	使用历史版本覆盖新版本 未完成
     cover(params){
         return request({
@@ -446,4 +455,6 @@ export default {
             data:params
         })
     },
+
+
 }

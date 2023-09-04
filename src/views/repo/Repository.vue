@@ -438,20 +438,29 @@ let currentModel = ref(null);
 let currentModelProjects = ref(null);
 let currentModelId = ref(null);
 let currnetModelContainResourceList = reactive([]);
-const handleNodeClick = (data) => {
+const handleNodeClick = async (data) => {
   // console.log("点击左侧 el-tree 节点信息:", data);
   currentModel.value = data.modelType;
   // 将modelId属性赋值给currentModelId变量，ModelId值在getProjectDetails函数中已经完成
   // 在各个模型软件下为每个模型添加这个模型软件的modelid
   if (data.model_id) {
     currentModelId.value = data.model_id;
+    let form_data = {
+      model_id: data.model_id,
+    };
+    const {
+      code,
+      data: modelData,
+      message,
+    } = await proxy.$api.getModelsById(form_data);
+    currentModelProjects.value = modelData;
   }
-  // 如果该节点下存在子项目，就将子项目的值赋给currentModelProjects变量
-  if (data.childProjects) {
-    currentModelProjects.value = data;
-  } else {
-    currentModelProjects.value = null;
-  }
+  // wsy如果该节点下存在子项目，就将子项目的值赋给currentModelProjects变量
+  // if (data.childProjects) {
+  //   currentModelProjects.value = data;
+  // } else {
+  //   currentModelProjects.value = null;
+  // }
   // console.log("左侧 el-tree currentModel", currentModel);
   // console.log("左侧 el-tree currentModelId", currentModelId);
   // console.log("左侧 el-tree currentModelProjects", currentModelProjects);
